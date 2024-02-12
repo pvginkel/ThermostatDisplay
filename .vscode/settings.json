@@ -15,5 +15,17 @@
   "idf.portWin": "COM15",
   "idf.pythonBinPathWin": "C:\\Users\\pvgin\\.espressif\\python_env\\idf5.1_py3.11_env\\Scripts\\python.exe",
   "idf.toolsPathWin": "C:\\Users\\pvgin\\.espressif",
-  "idf.flashType": "UART"
+  "idf.flashType": "UART",
+  "files.associations": {
+    "sdkconfig.h": "c",
+    "array": "cpp",
+    "deque": "cpp",
+    "list": "cpp",
+    "string": "cpp",
+    "unordered_map": "cpp",
+    "vector": "cpp",
+    "string_view": "cpp",
+    "initializer_list": "cpp",
+    "regex": "cpp"
+  }
 }
