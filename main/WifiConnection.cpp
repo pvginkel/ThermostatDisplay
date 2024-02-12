@@ -26,13 +26,22 @@ bool WifiConnection::begin() {
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
-    esp_event_handler_instance_t instance_any_id;
-    esp_event_handler_instance_t instance_got_ip;
+    esp_event_handler_instance_t instanceAnyId;
+    esp_event_handler_instance_t instanceGotIp;
 
-    ESP_ERROR_CHECK(
-        esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &eventHandlerThunk, this, &instance_any_id));
-    ESP_ERROR_CHECK(
-        esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &eventHandlerThunk, this, &instance_got_ip));
+    ESP_ERROR_CHECK(esp_event_handler_instance_register(
+        WIFI_EVENT, ESP_EVENT_ANY_ID,
+        [](auto eventHandlerArg, auto eventBase, auto eventId, auto eventData) {
+            ((WifiConnection *)eventHandlerArg)->eventHandler(eventBase, eventId, eventData);
+        },
+        this, &instanceAnyId));
+
+    ESP_ERROR_CHECK(esp_event_handler_instance_register(
+        IP_EVENT, IP_EVENT_STA_GOT_IP,
+        [](auto eventHandlerArg, auto eventBase, auto eventId, auto eventData) {
+            ((WifiConnection *)eventHandlerArg)->eventHandler(eventBase, eventId, eventData);
+        },
+        this, &instanceGotIp));
 
     wifi_config_t wifiConfig = {
         .sta =

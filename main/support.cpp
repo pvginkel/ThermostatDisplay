@@ -14,7 +14,13 @@ string format(const char* fmt, ...) {
     }
 
     auto buffer = (char*)malloc(length + 1);
+    if (!buffer) {
+        abort();
+    }
+
+    va_start(ap, fmt);
     vsprintf(buffer, fmt, ap);
+    va_end(ap);
 
     auto result = string(buffer, length);
 

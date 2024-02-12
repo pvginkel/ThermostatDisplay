@@ -5,26 +5,24 @@ enum class ThermostatMode { Off, Heat };
 
 struct ThermostatState {
     double localTemperature;
-    double humidity;
+    double localHumidity;
     double setpoint;
     ThermostatMode mode;
     ThermostatRunningState state;
 
     bool equals(ThermostatState &other) {
-        return localTemperature == other.localTemperature && humidity == other.humidity && setpoint == other.setpoint &&
-               mode == other.mode && state == other.state;
+        return localTemperature == other.localTemperature && localHumidity == other.localHumidity &&
+               setpoint == other.setpoint && mode == other.mode && state == other.state;
     }
 
     bool valid() {
-        return !isnan(localTemperature) && !isnan(humidity) && !isnan(setpoint) &&
+        return !isnan(localTemperature) && !isnan(localHumidity) && !isnan(setpoint) &&
                state != ThermostatRunningState::Unknown;
     }
 };
 
 class MQTTConnection {
-    static void eventHandlerThunk(void *eventHandlerArg, esp_event_base_t eventBase, int32_t eventId, void *eventData) {
-        ((MQTTConnection *)eventHandlerArg)->eventHandler(eventBase, eventId, eventData);
-    }
+    static constexpr double DEFAULT_SETPOINT = 19;
 
     static string getDeviceId();
 

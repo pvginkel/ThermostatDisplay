@@ -6,12 +6,15 @@ static const char *TAG = "MQTTConnection";
 static const char *TOPIC_PREFIX = "pieter";
 static const char *DEVICE_MANUFACTURER = "Pieter";
 static const char *DEVICE_MODEL = "Thermostat Display";
+constexpr auto QOS_MAX_ONE = 0;      // Send at most one.
+constexpr auto QOS_MIN_ONE = 1;      // Send at least one.
+constexpr auto QOS_EXACTLY_ONE = 2;  // Send exactly one.
 
 MQTTConnection::MQTTConnection()
     : _deviceId(getDeviceId()),
       _modeTopic(format("%s/%s/set/mode", TOPIC_PREFIX, CONFIG_DEVICE_NAME)),
       _localTemperatureTopic(format("%s/%s/set/local_temperature", TOPIC_PREFIX, CONFIG_DEVICE_NAME)),
-      _humidityTopic(format("%s/%s/set/humidity", TOPIC_PREFIX, CONFIG_DEVICE_NAME)),
+      _humidityTopic(format("%s/%s/set/local_humidity", TOPIC_PREFIX, CONFIG_DEVICE_NAME)),
       _setpointTopic(format("%s/%s/set/setpoint", TOPIC_PREFIX, CONFIG_DEVICE_NAME)),
       _heatingTopic(format("%s/%s/set/heating", TOPIC_PREFIX, CONFIG_DEVICE_NAME)),
       _entityTopic(format("%s/%s", TOPIC_PREFIX, CONFIG_DEVICE_NAME)),
@@ -72,14 +75,19 @@ void MQTTConnection::begin() {
 
     esp_mqtt5_client_set_connect_property(_client, &connect_property);
 
-    esp_mqtt_client_register_event(_client, MQTT_EVENT_ANY, eventHandlerThunk, this);
+    esp_mqtt_client_register_event(
+        _client, MQTT_EVENT_ANY,
+        [](auto eventHandlerArg, auto eventBase, auto eventId, auto eventData) {
+            ((MQTTConnection *)eventHandlerArg)->eventHandler(eventBase, eventId, eventData);
+        },
+        this);
     esp_mqtt_client_start(_client);
 }
 
 void MQTTConnection::initializeState() {
     _state.localTemperature = NAN;
-    _state.humidity = NAN;
-    _state.setpoint = NAN;
+    _state.localHumidity = NAN;
+    _state.setpoint = DEFAULT_SETPOINT;
     _state.mode = ThermostatMode::Off;
     _state.state = ThermostatRunningState::Unknown;
 
@@ -106,6 +114,10 @@ void MQTTConnection::initializeState() {
 }
 
 void MQTTConnection::saveState(ThermostatState &state) {
+    if (_state.setpoint == state.setpoint && _state.mode == state.mode) {
+        return;
+    }
+
     nvs_handle_t handle;
     ESP_ERROR_CHECK(nvs_open("storage", NVS_READWRITE, &handle));
 
@@ -202,7 +214,7 @@ void MQTTConnection::handleData(esp_mqtt_event_handle_t event) {
     } else if (topic == _localTemperatureTopic) {
         state.localTemperature = atof(data.c_str());
     } else if (topic == _humidityTopic) {
-        state.humidity = atof(data.c_str());
+        state.localHumidity = atof(data.c_str());
     } else if (topic == _heatingTopic) {
         state.state = data == "true" ? ThermostatRunningState::True : ThermostatRunningState::False;
     }
@@ -233,6 +245,8 @@ void MQTTConnection::publishDiscovery() {
     cJSON_AddStringToObject(root, "action_topic", _entityTopic.c_str());
     cJSON_AddStringToObject(root, "current_temperature_template", "{{ value_json.local_temperature }}");
     cJSON_AddStringToObject(root, "current_temperature_topic", _entityTopic.c_str());
+    cJSON_AddStringToObject(root, "current_humidity_template", "{{ value_json.local_humidity }}");
+    cJSON_AddStringToObject(root, "current_humidity_topic", _entityTopic.c_str());
 
     auto device = cJSON_AddObjectToObject(root, "device");
 
@@ -268,13 +282,13 @@ void MQTTConnection::publishDiscovery() {
 
     auto publishTopic = format("homeassistant/climate/%s/climate/config", _deviceId.c_str());
 
-    ESP_ERROR_ASSERT(esp_mqtt_client_publish(_client, publishTopic.c_str(), json, 0, 0, true) >= 0);
+    ESP_ERROR_ASSERT(esp_mqtt_client_publish(_client, publishTopic.c_str(), json, 0, QOS_MIN_ONE, true) >= 0);
 
     cJSON_free(json);
 }
 
 void MQTTConnection::setOnline() {
-    ESP_ERROR_ASSERT(esp_mqtt_client_publish(_client, _stateTopic.c_str(), "online", 0, 0, false) >= 0);
+    ESP_ERROR_ASSERT(esp_mqtt_client_publish(_client, _stateTopic.c_str(), "online", 0, QOS_MIN_ONE, false) >= 0);
 }
 
 void MQTTConnection::setState(ThermostatState &state, bool force) {
@@ -284,9 +298,7 @@ void MQTTConnection::setState(ThermostatState &state, bool force) {
 
     ESP_LOGI(TAG, "Received new state");
 
-    if (_state.setpoint != state.setpoint || _state.mode != state.mode) {
-        saveState(state);
-    }
+    saveState(state);
 
     _state = state;
 
@@ -300,7 +312,7 @@ void MQTTConnection::setState(ThermostatState &state, bool force) {
     auto root = cJSON_CreateObject();
 
     cJSON_AddNumberToObject(root, "local_temperature", state.localTemperature);
-    cJSON_AddNumberToObject(root, "humidity", state.humidity);
+    cJSON_AddNumberToObject(root, "local_humidity", state.localHumidity);
     cJSON_AddNumberToObject(root, "setpoint", state.setpoint);
     cJSON_AddStringToObject(root, "mode", serializeMode(state.mode));
     cJSON_AddBoolToObject(root, "heating", state.state == ThermostatRunningState::True);
@@ -308,9 +320,7 @@ void MQTTConnection::setState(ThermostatState &state, bool force) {
     auto json = cJSON_Print(root);
     cJSON_Delete(root);
 
-    ESP_LOGI(TAG, "PUBLISHING STATE");
-
-    auto result = esp_mqtt_client_publish(_client, _entityTopic.c_str(), json, 0, 0, true);
+    auto result = esp_mqtt_client_publish(_client, _entityTopic.c_str(), json, 0, QOS_MIN_ONE, true);
     if (result < 0) {
         ESP_LOGE(TAG, "Sending status update message failed with error %d", result);
     }
