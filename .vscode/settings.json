@@ -30,5 +30,5 @@
     "random": "c",
     "*.tcc": "cpp"
   },
-  "cSpell.words": ["LOGI", "MQTT"]
+  "cSpell.words": ["LOGI", "MQTT", "setpoint"]
 }
