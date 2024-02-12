@@ -2,10 +2,8 @@
 
 #include "Application.h"
 
-extern "C" {
-void app_main() {
-    Application application;
+Application application;
 
-    application.run();
-}
+extern "C" {
+void app_main() { application.run(); }
 }

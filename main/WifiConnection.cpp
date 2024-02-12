@@ -15,7 +15,7 @@ constexpr EventBits_t WIFI_FAIL_BIT = BIT1;
 
 WifiConnection::WifiConnection() : _reconnectTries(0) {}
 
-void WifiConnection::begin() {
+bool WifiConnection::begin() {
     _wifiEventGroup = xEventGroupCreate();
 
     ESP_ERROR_CHECK(esp_netif_init());
@@ -29,10 +29,10 @@ void WifiConnection::begin() {
     esp_event_handler_instance_t instance_any_id;
     esp_event_handler_instance_t instance_got_ip;
 
-    ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifiEventHandlerThunk, this,
-                                                        &instance_any_id));
-    ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifiEventHandlerThunk, this,
-                                                        &instance_got_ip));
+    ESP_ERROR_CHECK(
+        esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &eventHandlerThunk, this, &instance_any_id));
+    ESP_ERROR_CHECK(
+        esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &eventHandlerThunk, this, &instance_got_ip));
 
     wifi_config_t wifiConfig = {
         .sta =
@@ -69,19 +69,27 @@ void WifiConnection::begin() {
      * we can test which event actually happened. */
     if (bits & WIFI_CONNECTED_BIT) {
         ESP_LOGI(TAG, "Connected to AP SSID: %s password: %s", wifiConfig.sta.ssid, wifiConfig.sta.password);
-    } else if (bits & WIFI_FAIL_BIT) {
+        return true;
+    }
+
+    if (bits & WIFI_FAIL_BIT) {
         ESP_LOGI(TAG, "Failed to connect to SSID: %s, password: %s", wifiConfig.sta.ssid, wifiConfig.sta.password);
     } else {
         ESP_LOGE(TAG, "Unexpected event");
     }
+
+    return false;
 }
 
-void WifiConnection::wifiEventHandler(esp_event_base_t eventBase, int32_t eventId, void *eventData) {
+void WifiConnection::eventHandler(esp_event_base_t eventBase, int32_t eventId, void *eventData) {
     if (eventBase == WIFI_EVENT && eventId == WIFI_EVENT_STA_START) {
         ESP_LOGI(TAG, "Connecting to AP");
         esp_wifi_connect();
     } else if (eventBase == WIFI_EVENT && eventId == WIFI_EVENT_STA_DISCONNECTED) {
         auto event = (wifi_event_sta_disconnected_t *)eventData;
+
+        // Reasons are defined here:
+        // https://github.com/espressif/esp-idf/blob/4b5b064caf951a48b48a39293d625b5de2132719/components/esp_wifi/include/esp_wifi_types_generic.h#L79.
 
         ESP_LOGI(TAG, "Disconnected from AP, reason %d", event->reason);
 

@@ -26,6 +26,9 @@
     "vector": "cpp",
     "string_view": "cpp",
     "initializer_list": "cpp",
-    "regex": "cpp"
-  }
+    "regex": "cpp",
+    "random": "c",
+    "*.tcc": "cpp"
+  },
+  "cSpell.words": ["LOGI", "MQTT"]
 }

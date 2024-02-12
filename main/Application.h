@@ -1,9 +1,11 @@
 #pragma once
 
+#include "MQTTConnection.h"
 #include "WifiConnection.h"
 
 class Application {
     WifiConnection wifiConnection;
+    MQTTConnection mqttConnection;
 
 public:
     void run();

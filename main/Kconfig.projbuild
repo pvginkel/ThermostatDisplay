@@ -8,8 +8,8 @@ menu "Device Configuration"
     config WIFI_PASSWORD
         string "WiFi password"
 
-    config MQTT_SERVER
-        string "MQTT server name"
+    config MQTT_BROKER_URL
+        string "MQTT broker URL"
 
     config MQTT_USER_ID
         string "MQTT user ID"

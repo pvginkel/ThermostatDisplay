@@ -9,9 +9,10 @@ void Application::run() {
     begin();
 
     /*
-        while (1) {
-            loop();
-        }*/
+    while (1) {
+        loop();
+    }
+    */
 }
 
 void Application::setupFlash() {
@@ -25,6 +26,13 @@ void Application::setupFlash() {
     ESP_ERROR_CHECK(ret);
 }
 
-void Application::begin() { wifiConnection.begin(); }
+void Application::begin() {
+    if (!wifiConnection.begin()) {
+        ESP_LOGE(TAG, "Aborting startup, failed to connect to Wifi");
+        return;
+    }
+
+    mqttConnection.begin();
+}
 
 void Application::loop() {}
