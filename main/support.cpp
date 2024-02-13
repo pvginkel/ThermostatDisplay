@@ -28,3 +28,11 @@ string format(const char* fmt, ...) {
 
     return result;
 }
+
+static bool ichar_equals(char a, char b) {
+    return std::tolower(static_cast<unsigned char>(a)) == std::tolower(static_cast<unsigned char>(b));
+}
+
+bool iequals(const string& a, const string& b) {
+    return a.size() == b.size() && std::equal(a.begin(), a.end(), b.begin(), ichar_equals);
+}

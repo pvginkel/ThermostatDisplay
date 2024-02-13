@@ -25,3 +25,5 @@ string format(const char* fmt, ...);
         }                                                                                                      \
     } while (0)
 #endif
+
+bool iequals(const string& a, const string& b);

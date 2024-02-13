@@ -210,6 +210,8 @@ void MQTTConnection::handleData(esp_mqtt_event_handle_t event) {
     auto topic = string(event->topic, event->topic_len);
     auto data = string(event->data, event->data_len);
 
+    ESP_LOGI(TAG, "Received data topic %s data '%s'", topic.c_str(), data.c_str());
+
     auto state = _state;
 
     if (topic == _modeTopic) {
@@ -221,7 +223,7 @@ void MQTTConnection::handleData(esp_mqtt_event_handle_t event) {
     } else if (topic == _humidityTopic) {
         state.localHumidity = atof(data.c_str());
     } else if (topic == _heatingTopic) {
-        state.state = data == "true" ? ThermostatRunningState::True : ThermostatRunningState::False;
+        state.state = iequals(data, "true") ? ThermostatRunningState::True : ThermostatRunningState::False;
     }
 
     setState(state);
@@ -320,7 +322,7 @@ void MQTTConnection::setState(ThermostatState &state, bool force) {
     cJSON_AddNumberToObject(root, "local_humidity", state.localHumidity);
     cJSON_AddNumberToObject(root, "setpoint", state.setpoint);
     cJSON_AddStringToObject(root, "mode", serializeMode(state.mode));
-    cJSON_AddBoolToObject(root, "heating", state.state == ThermostatRunningState::True);
+    cJSON_AddStringToObject(root, "state", state.state == ThermostatRunningState::True ? "heating" : "idle");
 
     auto json = cJSON_Print(root);
     cJSON_Delete(root);

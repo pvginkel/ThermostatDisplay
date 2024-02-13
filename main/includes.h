@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <cstdarg>
 #include <string>
