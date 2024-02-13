@@ -4,18 +4,7 @@
 
 static const char *TAG = "WifiConnection";
 
-// The event group allows multiple bits for each event, but we only care about
-// two events:
-//
-// - We are connected to the AP with an IP.
-// - We failed to connect after the maximum amount of retries
-//
-constexpr EventBits_t WIFI_CONNECTED_BIT = BIT0;
-constexpr EventBits_t WIFI_FAIL_BIT = BIT1;
-
-WifiConnection::WifiConnection() : _reconnectTries(0) {}
-
-bool WifiConnection::begin() {
+void WifiConnection::begin() {
     _wifiEventGroup = xEventGroupCreate();
 
     ESP_ERROR_CHECK(esp_netif_init());
@@ -56,7 +45,10 @@ bool WifiConnection::begin() {
                 // set the password with length and format matching to
                 // WIFI_AUTH_WEP/WIFI_AUTH_WPA_PSK standards.
 
-                .threshold = {.authmode = WIFI_AUTH_WPA2_PSK},
+                .threshold =
+                    {
+                        .authmode = WIFI_AUTH_WPA2_PSK,
+                    },
                 .sae_pwe_h2e = WPA3_SAE_PWE_BOTH,
                 .sae_h2e_identifier = "",
             },
@@ -67,27 +59,6 @@ bool WifiConnection::begin() {
     ESP_ERROR_CHECK(esp_wifi_start());
 
     ESP_LOGI(TAG, "Finished setting up WiFi");
-
-    /* Waiting until either the connection is established (WIFI_CONNECTED_BIT)
-     * or connection failed for the maximum number of re-tries (WIFI_FAIL_BIT).
-     * The bits are set by event_handler() (see above) */
-    auto bits =
-        xEventGroupWaitBits(_wifiEventGroup, WIFI_CONNECTED_BIT | WIFI_FAIL_BIT, pdFALSE, pdFALSE, portMAX_DELAY);
-
-    /* xEventGroupWaitBits() returns the bits before the call returned, hence
-     * we can test which event actually happened. */
-    if (bits & WIFI_CONNECTED_BIT) {
-        ESP_LOGI(TAG, "Connected to AP SSID: %s password: %s", wifiConfig.sta.ssid, wifiConfig.sta.password);
-        return true;
-    }
-
-    if (bits & WIFI_FAIL_BIT) {
-        ESP_LOGI(TAG, "Failed to connect to SSID: %s, password: %s", wifiConfig.sta.ssid, wifiConfig.sta.password);
-    } else {
-        ESP_LOGE(TAG, "Unexpected event");
-    }
-
-    return false;
 }
 
 void WifiConnection::eventHandler(esp_event_base_t eventBase, int32_t eventId, void *eventData) {
@@ -102,21 +73,18 @@ void WifiConnection::eventHandler(esp_event_base_t eventBase, int32_t eventId, v
 
         ESP_LOGI(TAG, "Disconnected from AP, reason %d", event->reason);
 
-        if (_reconnectTries < MAX_RECONNECT_TRIES) {
-            ESP_LOGI(TAG, "Retry to connect to the AP");
-            esp_wifi_connect();
-            _reconnectTries++;
-        } else {
-            ESP_LOGI(TAG, "Failed to connect to AP");
-            xEventGroupSetBits(_wifiEventGroup, WIFI_FAIL_BIT);
-        }
+        _stateChanged.call({
+            .connected = false,
+            .errorReason = event->reason,
+        });
     } else if (eventBase == IP_EVENT && eventId == IP_EVENT_STA_GOT_IP) {
         auto event = (ip_event_got_ip_t *)eventData;
 
         ESP_LOGI(TAG, "Got ip:" IPSTR, IP2STR(&event->ip_info.ip));
 
-        _reconnectTries = 0;
-
-        xEventGroupSetBits(_wifiEventGroup, WIFI_CONNECTED_BIT);
+        _stateChanged.call({
+            .connected = true,
+            .errorReason = 0,
+        });
     }
 }

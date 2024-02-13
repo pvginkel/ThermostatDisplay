@@ -1,24 +1,9 @@
 #pragma once
 
-enum class ThermostatRunningState { Unknown, True, False };
-enum class ThermostatMode { Off, Heat };
+#include "ThermostatState.h"
 
-struct ThermostatState {
-    double localTemperature;
-    double localHumidity;
-    double setpoint;
-    ThermostatMode mode;
-    ThermostatRunningState state;
-
-    bool equals(ThermostatState &other) {
-        return localTemperature == other.localTemperature && localHumidity == other.localHumidity &&
-               setpoint == other.setpoint && mode == other.mode && state == other.state;
-    }
-
-    bool valid() {
-        return !isnan(localTemperature) && !isnan(localHumidity) && !isnan(setpoint) &&
-               state != ThermostatRunningState::Unknown;
-    }
+struct MQTTConnectionState {
+    bool connected;
 };
 
 class MQTTConnection {
@@ -36,12 +21,19 @@ class MQTTConnection {
     string _entityTopic;
     string _stateTopic;
     ThermostatState _state;
-    Callback _stateChanged;
+    CallbackArgs<MQTTConnectionState> _stateChanged;
+    Callback _thermostatStateChanged;
 
 public:
     MQTTConnection();
 
     void begin();
+    void onStateChanged(CallbackArgs<MQTTConnectionState>::Func func, uintptr_t data = 0) {
+        _stateChanged.set(func, data);
+    }
+    void onThermostatStateChanged(Callback::Func func, uintptr_t data = 0) { _thermostatStateChanged.set(func, data); }
+    ThermostatState getState() { return _state; }
+    void setState(ThermostatState &state, bool force = false);
 
 private:
     void initializeState();
@@ -52,9 +44,6 @@ private:
     void subscribe(string &topic);
     void publishDiscovery();
     void setOnline();
-    ThermostatState getState() { return _state; }
-    void setState(ThermostatState &state, bool force = false);
-    void onStateChanged(Callback::Func func, uintptr_t data = 0) { _stateChanged.set(func, data); }
     const char *serializeMode(ThermostatMode value);
     ThermostatMode deserializeMode(string &value);
 };

@@ -1,17 +1,26 @@
 #pragma once
 
+#include "LoadingUI.h"
 #include "MQTTConnection.h"
+#include "ThermostatUI.h"
 #include "WifiConnection.h"
 
 class Application {
-    WifiConnection wifiConnection;
-    MQTTConnection mqttConnection;
+    lv_obj_t* _parent;
+    WifiConnection _wifiConnection;
+    MQTTConnection _mqttConnection;
+    LoadingUI* _loadingUI;
+    ThermostatUI* _thermostatUI;
 
 public:
-    void run();
+    Application();
+
+    void run(lv_disp_t* disp);
 
 private:
     void setupFlash();
     void begin();
-    void loop();
+    void beginWifi();
+    void beginMQTT();
+    void beginUI();
 };

@@ -81,15 +81,12 @@ void MQTTConnection::begin() {
             ((MQTTConnection *)eventHandlerArg)->eventHandler(eventBase, eventId, eventData);
         },
         this);
+
     esp_mqtt_client_start(_client);
 }
 
 void MQTTConnection::initializeState() {
-    _state.localTemperature = NAN;
-    _state.localHumidity = NAN;
     _state.setpoint = DEFAULT_SETPOINT;
-    _state.mode = ThermostatMode::Off;
-    _state.state = ThermostatRunningState::Unknown;
 
     nvs_handle_t handle;
     auto err = nvs_open("storage", NVS_READONLY, &handle);
@@ -152,6 +149,10 @@ void MQTTConnection::eventHandler(esp_event_base_t eventBase, int32_t eventId, v
 
         case MQTT_EVENT_DISCONNECTED:
             ESP_LOGI(TAG, "MQTT disconnected");
+
+            _stateChanged.call({
+                .connected = false,
+            });
             break;
 
         case MQTT_EVENT_SUBSCRIBED:
@@ -199,6 +200,10 @@ void MQTTConnection::handleConnected() {
     publishDiscovery();
     setOnline();
     setState(_state, true);
+
+    _stateChanged.call({
+        .connected = true,
+    });
 }
 
 void MQTTConnection::handleData(esp_mqtt_event_handle_t event) {
@@ -307,7 +312,7 @@ void MQTTConnection::setState(ThermostatState &state, bool force) {
         return;
     }
 
-    _stateChanged.call();
+    _thermostatStateChanged.call();
 
     auto root = cJSON_CreateObject();
 

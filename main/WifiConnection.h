@@ -1,15 +1,19 @@
 #pragma once
 
-class WifiConnection {
-    static constexpr int MAX_RECONNECT_TRIES = 5;
+struct WifiConnectionState {
+    bool connected;
+    uint8_t errorReason;
+};
 
+class WifiConnection {
     EventGroupHandle_t _wifiEventGroup;
-    int _reconnectTries;
+    CallbackArgs<WifiConnectionState> _stateChanged;
 
     void eventHandler(esp_event_base_t eventBase, int32_t eventId, void *eventData);
 
 public:
-    WifiConnection();
-
-    bool begin();
+    void begin();
+    void onStateChanged(CallbackArgs<WifiConnectionState>::Func func, uintptr_t data = 0) {
+        _stateChanged.set(func, data);
+    }
 };

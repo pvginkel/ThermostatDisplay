@@ -3,6 +3,8 @@
 #include <math.h>
 #include <string.h>
 
+#include <algorithm>
+#include <cmath>
 #include <cstdarg>
 #include <string>
 
@@ -18,6 +20,7 @@ using namespace std;
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
 #include "freertos/task.h"
+#include "lvgl.h"
 #include "lwip/err.h"
 #include "lwip/sys.h"
 #include "mqtt_client.h"
