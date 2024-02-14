@@ -25,6 +25,7 @@
   },
   "cSpell.words": ["LOGI", "Lvgl", "MQTT", "roboto", "setpoint"],
   "files.exclude": {
-    "**/LvglWindowsSimulator": true
+    "documentation": true,
+    "LvglWindowsSimulator": true
   }
 }
