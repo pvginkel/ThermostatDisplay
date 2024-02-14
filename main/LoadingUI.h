@@ -3,8 +3,6 @@
 #include "Callback.h"
 #include "LvglUI.h"
 
-using namespace std;
-
 enum class LoadingUIState { None, Loading, Error };
 
 class LoadingUI : public LvglUI {
