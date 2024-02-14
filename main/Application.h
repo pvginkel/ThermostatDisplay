@@ -2,6 +2,7 @@
 
 #include "LoadingUI.h"
 #include "MQTTConnection.h"
+#include "Queue.h"
 #include "ThermostatUI.h"
 #include "WifiConnection.h"
 
@@ -11,11 +12,13 @@ class Application {
     MQTTConnection _mqttConnection;
     LoadingUI* _loadingUI;
     ThermostatUI* _thermostatUI;
+    Queue _queue;
 
 public:
     Application();
 
     void run(lv_disp_t* disp);
+    void loop();
 
 private:
     void setupFlash();

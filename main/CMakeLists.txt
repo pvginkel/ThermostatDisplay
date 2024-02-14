@@ -1,5 +1,5 @@
 idf_component_register(
-    SRCS "main.c" "Application.cpp" "MQTTConnection.cpp" "support.cpp" "WifiConnection.cpp"
+    SRCS "Queue.cpp" "main.c" "Application.cpp" "MQTTConnection.cpp" "support.cpp" "WifiConnection.cpp"
     "lv_font_roboto_30.c" "lv_font_roboto_85.c" "LvglUI.cpp" "Messages.cpp" "LoadingUI.cpp" "ThermostatUI.cpp"
     INCLUDE_DIRS "." "../components/espressif__esp_lcd_touch_gt911/include"
 )

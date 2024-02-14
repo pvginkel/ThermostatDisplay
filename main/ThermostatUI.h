@@ -19,12 +19,12 @@ class ThermostatUI : public LvglUI {
     lv_obj_t* _setpointHeatingArc;
     lv_obj_t* _localTemperatureCircle;
     lv_obj_t* _setpointCircle;
-    CallbackArgs<double> _setpointChanged;
+    CallbackArg<double> _setpointChanged;
 
 public:
     ThermostatUI(lv_obj_t* parent);
     void setState(const ThermostatState& state);
-    void onSetpointChanged(CallbackArgs<double>::Func func, uintptr_t data) { _setpointChanged.set(func, data); }
+    void onSetpointChanged(CallbackArg<double>::Func func, uintptr_t data) { _setpointChanged.set(func, data); }
 
 protected:
     void doRender(lv_obj_t* parent) override;

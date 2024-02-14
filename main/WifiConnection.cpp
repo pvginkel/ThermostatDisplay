@@ -4,6 +4,8 @@
 
 static const char *TAG = "WifiConnection";
 
+WifiConnection::WifiConnection(Queue *synchronizationQueue) : _synchronizationQueue(synchronizationQueue) {}
+
 void WifiConnection::begin() {
     _wifiEventGroup = xEventGroupCreate();
 
@@ -73,18 +75,12 @@ void WifiConnection::eventHandler(esp_event_base_t eventBase, int32_t eventId, v
 
         ESP_LOGI(TAG, "Disconnected from AP, reason %d", event->reason);
 
-        _stateChanged.call({
-            .connected = false,
-            .errorReason = event->reason,
-        });
+        _stateChanged.queue(_synchronizationQueue, {.connected = false, .errorReason = event->reason});
     } else if (eventBase == IP_EVENT && eventId == IP_EVENT_STA_GOT_IP) {
         auto event = (ip_event_got_ip_t *)eventData;
 
         ESP_LOGI(TAG, "Got ip:" IPSTR, IP2STR(&event->ip_info.ip));
 
-        _stateChanged.call({
-            .connected = true,
-            .errorReason = 0,
-        });
+        _stateChanged.queue(_synchronizationQueue, {.connected = true, .errorReason = 0});
     }
 }

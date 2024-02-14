@@ -19,7 +19,7 @@
     "cstdarg": "cpp",
     "algorithm": "cpp"
   },
-  "cSpell.words": ["LOGI", "Lvgl", "roboto", "setpoint"],
+  "cSpell.words": ["LOGI", "Lvgl", "MQTT", "roboto", "setpoint"],
   "files.exclude": {
     "**/LvglWindowsSimulator": true
   }

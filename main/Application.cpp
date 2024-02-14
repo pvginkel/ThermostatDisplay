@@ -13,9 +13,16 @@ void app_run(lv_disp_t *disp) {
     application = new Application();
     application->run(disp);
 }
+
+void app_loop() { application->loop(); }
 }
 
-Application::Application() : _parent(nullptr), _loadingUI(nullptr), _thermostatUI(nullptr) {}
+Application::Application()
+    : _parent(nullptr),
+      _wifiConnection(&_queue),
+      _mqttConnection(&_queue),
+      _loadingUI(nullptr),
+      _thermostatUI(nullptr) {}
 
 void Application::run(lv_disp_t *disp) {
     _parent = lv_disp_get_scr_act(disp);
@@ -134,3 +141,5 @@ void Application::beginUI() {
     _thermostatUI->begin();
     _thermostatUI->setState(_mqttConnection.getState());
 }
+
+void Application::loop() { _queue.process(); }

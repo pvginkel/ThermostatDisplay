@@ -11,6 +11,7 @@ class MQTTConnection {
 
     static string getDeviceId();
 
+    Queue *_synchronizationQueue;
     string _deviceId;
     esp_mqtt_client_handle_t _client;
     string _modeTopic;
@@ -21,14 +22,14 @@ class MQTTConnection {
     string _entityTopic;
     string _stateTopic;
     ThermostatState _state;
-    CallbackArgs<MQTTConnectionState> _stateChanged;
+    CallbackArg<MQTTConnectionState> _stateChanged;
     Callback _thermostatStateChanged;
 
 public:
-    MQTTConnection();
+    MQTTConnection(Queue *synchronizationQueue);
 
     void begin();
-    void onStateChanged(CallbackArgs<MQTTConnectionState>::Func func, uintptr_t data = 0) {
+    void onStateChanged(CallbackArg<MQTTConnectionState>::Func func, uintptr_t data = 0) {
         _stateChanged.set(func, data);
     }
     void onThermostatStateChanged(Callback::Func func, uintptr_t data = 0) { _thermostatStateChanged.set(func, data); }

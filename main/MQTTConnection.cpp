@@ -10,8 +10,9 @@ constexpr auto QOS_MAX_ONE = 0;      // Send at most one.
 constexpr auto QOS_MIN_ONE = 1;      // Send at least one.
 constexpr auto QOS_EXACTLY_ONE = 2;  // Send exactly one.
 
-MQTTConnection::MQTTConnection()
-    : _deviceId(getDeviceId()),
+MQTTConnection::MQTTConnection(Queue *synchronizationQueue)
+    : _synchronizationQueue(synchronizationQueue),
+      _deviceId(getDeviceId()),
       _modeTopic(format("%s/%s/set/mode", TOPIC_PREFIX, CONFIG_DEVICE_NAME)),
       _localTemperatureTopic(format("%s/%s/set/local_temperature", TOPIC_PREFIX, CONFIG_DEVICE_NAME)),
       _humidityTopic(format("%s/%s/set/local_humidity", TOPIC_PREFIX, CONFIG_DEVICE_NAME)),
@@ -150,9 +151,7 @@ void MQTTConnection::eventHandler(esp_event_base_t eventBase, int32_t eventId, v
         case MQTT_EVENT_DISCONNECTED:
             ESP_LOGI(TAG, "MQTT disconnected");
 
-            _stateChanged.call({
-                .connected = false,
-            });
+            _stateChanged.queue(_synchronizationQueue, {.connected = false});
             break;
 
         case MQTT_EVENT_SUBSCRIBED:
@@ -201,9 +200,7 @@ void MQTTConnection::handleConnected() {
     setOnline();
     setState(_state, true);
 
-    _stateChanged.call({
-        .connected = true,
-    });
+    _stateChanged.queue(_synchronizationQueue, {.connected = true});
 }
 
 void MQTTConnection::handleData(esp_mqtt_event_handle_t event) {
