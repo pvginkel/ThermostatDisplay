@@ -26,6 +26,7 @@
 #include "esp_vfs_fat.h"
 #include "sdmmc_cmd.h"
 
+#include "ESP_Panel_Conf.h"
 
 #define EXAMPLE_MAX_CHAR_SIZE    64
 
@@ -53,7 +54,7 @@ uint8_t sd_flag = 0;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////// Please update the following configuration according to your LCD spec //////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#define EXAMPLE_LCD_PIXEL_CLOCK_HZ     (30 * 1000 * 1000)
+#define EXAMPLE_LCD_PIXEL_CLOCK_HZ     ESP_PANEL_LCD_RGB_CLK_HZ
 #define EXAMPLE_LCD_BK_LIGHT_ON_LEVEL  1
 #define EXAMPLE_LCD_BK_LIGHT_OFF_LEVEL !EXAMPLE_LCD_BK_LIGHT_ON_LEVEL
 #define EXAMPLE_PIN_NUM_BK_LIGHT       -1
@@ -98,6 +99,7 @@ SemaphoreHandle_t sem_gui_ready;
 #endif
 
 extern void app_run(lv_disp_t *disp);
+extern void app_loop();
 
 /**
  * @brief i2c master initialization
@@ -199,7 +201,7 @@ void app_main(void)
     ESP_LOGI(TAG, "Install RGB LCD panel driver");
     esp_lcd_panel_handle_t panel_handle = NULL;
     esp_lcd_rgb_panel_config_t panel_config = {
-        .data_width = 16, // RGB565 in parallel mode, thus 16bit in width
+        .data_width = ESP_PANEL_LCD_RGB_DATA_WIDTH,
         .psram_trans_align = 64,
         .num_fbs = EXAMPLE_LCD_NUM_FB,
 #if CONFIG_DISPLAY_USE_BOUNCE_BUFFER
@@ -233,14 +235,17 @@ void app_main(void)
             .pclk_hz = EXAMPLE_LCD_PIXEL_CLOCK_HZ,
             .h_res = EXAMPLE_LCD_H_RES,
             .v_res = EXAMPLE_LCD_V_RES,
-            // The following parameters should refer to LCD spec
-            .hsync_back_porch = 30,
-            .hsync_front_porch = 210,
-            .hsync_pulse_width = 30,
-            .vsync_back_porch = 4,
-            .vsync_front_porch = 4,
-            .vsync_pulse_width = 4,
-            .flags.pclk_active_neg = true,
+            // The following parameters should refer to LCD spec 
+            .hsync_pulse_width = ESP_PANEL_LCD_RGB_HPW,
+            .hsync_back_porch = ESP_PANEL_LCD_RGB_HBP,
+            .hsync_front_porch = ESP_PANEL_LCD_RGB_HFP,
+            .vsync_pulse_width = ESP_PANEL_LCD_RGB_VPW,
+            .vsync_back_porch = ESP_PANEL_LCD_RGB_VBP,
+            .vsync_front_porch = ESP_PANEL_LCD_RGB_VFP,
+            .flags = {
+                .pclk_active_neg = ESP_PANEL_LCD_RGB_PCLK_ACTIVE_NEG,
+            },
+
         },
         .flags.fb_in_psram = true, // allocate frame buffer in PSRAM
     };
@@ -380,6 +385,8 @@ void app_main(void)
     app_run(disp);
     
     while (1) {
+        app_loop();
+
         // raise the task priority of LVGL and/or reduce the handler period can improve the performance
         vTaskDelay(pdMS_TO_TICKS(10));
         // The task running lv_timer_handler should have lower priority than that running `lv_tick_inc`

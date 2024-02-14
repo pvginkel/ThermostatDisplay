@@ -46,13 +46,6 @@ menu "Display Configuration"
             Enable this option, the example will use a pair of semaphores to avoid the tearing effect.
             Note, if the Double Frame Buffer is used, then we can also avoid the tearing effect without the lock.
 
-    config DISPLAY_FORMAT_IF_MOUNT_FAILED
-        bool "Format the card if mount failed"
-        default n
-        help
-            If this config item is set, format_if_mount_failed will be set to true and the card will be formatted if
-            the mount has failed.
-
     config DISPLAY_PIN_MOSI
         int "MOSI GPIO number"
         default 15 if IDF_TARGET_ESP32
