@@ -6,17 +6,16 @@
 #include "driver/i2c.h"
 #include "esp_lcd_touch_gt911.h"
 
-#define EXAMPLE_MAX_CHAR_SIZE 64
-
 // The sample uses 160 (1/3d of 480), but we don't have that available.
 #define DISPLAY_BUFFER_LINES (480 / 5)
 
-// Pin assignments can be set in menuconfig, see "SD SPI Example Configuration" menu.
-// You can also change the pin assignments here by changing the following 4 lines.
-#define PIN_NUM_MISO CONFIG_DISPLAY_PIN_MISO
-#define PIN_NUM_MOSI CONFIG_DISPLAY_PIN_MOSI
-#define PIN_NUM_CLK CONFIG_DISPLAY_PIN_CLK
-#define PIN_NUM_CS CONFIG_DISPLAY_PIN_CS
+#define LVGL_TICK_PERIOD_MS 2
+
+#if CONFIG_DISPLAY_DOUBLE_FB
+#define LCD_NUM_FB 2
+#else
+#define LCD_NUM_FB 1
+#endif  // CONFIG_DISPLAY_DOUBLE_FB
 
 #define I2C_MASTER_SCL_IO 9 /*!< GPIO number used for I2C master clock */
 #define I2C_MASTER_SDA_IO 8 /*!< GPIO number used for I2C master data  */
@@ -28,49 +27,7 @@
 #define I2C_MASTER_RX_BUF_DISABLE 0 /*!< I2C master doesn't need buffer */
 #define I2C_MASTER_TIMEOUT_MS 1000
 
-static const char *TAG = "main";
-uint8_t sd_flag = 0;
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////// Please update the following configuration according to your LCD spec //////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#define EXAMPLE_LCD_PIXEL_CLOCK_HZ ESP_PANEL_LCD_RGB_CLK_HZ
-#define EXAMPLE_LCD_BK_LIGHT_ON_LEVEL 1
-#define EXAMPLE_LCD_BK_LIGHT_OFF_LEVEL !EXAMPLE_LCD_BK_LIGHT_ON_LEVEL
-#define EXAMPLE_PIN_NUM_BK_LIGHT -1
-#define EXAMPLE_PIN_NUM_HSYNC 46
-#define EXAMPLE_PIN_NUM_VSYNC 3
-#define EXAMPLE_PIN_NUM_DE 5
-#define EXAMPLE_PIN_NUM_PCLK 7
-#define EXAMPLE_PIN_NUM_DATA0 14   // B3
-#define EXAMPLE_PIN_NUM_DATA1 38   // B4
-#define EXAMPLE_PIN_NUM_DATA2 18   // B5
-#define EXAMPLE_PIN_NUM_DATA3 17   // B6
-#define EXAMPLE_PIN_NUM_DATA4 10   // B7
-#define EXAMPLE_PIN_NUM_DATA5 39   // G2
-#define EXAMPLE_PIN_NUM_DATA6 0    // G3
-#define EXAMPLE_PIN_NUM_DATA7 45   // G4
-#define EXAMPLE_PIN_NUM_DATA8 48   // G5
-#define EXAMPLE_PIN_NUM_DATA9 47   // G6
-#define EXAMPLE_PIN_NUM_DATA10 21  // G7
-#define EXAMPLE_PIN_NUM_DATA11 1   // R3
-#define EXAMPLE_PIN_NUM_DATA12 2   // R4
-#define EXAMPLE_PIN_NUM_DATA13 42  // R5
-#define EXAMPLE_PIN_NUM_DATA14 41  // R6
-#define EXAMPLE_PIN_NUM_DATA15 40  // R7
-#define EXAMPLE_PIN_NUM_DISP_EN -1
-
-// The pixel number in horizontal and vertical
-#define EXAMPLE_LCD_H_RES 800
-#define EXAMPLE_LCD_V_RES 480
-
-#if CONFIG_DISPLAY_DOUBLE_FB
-#define EXAMPLE_LCD_NUM_FB 2
-#else
-#define EXAMPLE_LCD_NUM_FB 1
-#endif  // CONFIG_DISPLAY_DOUBLE_FB
-
-#define EXAMPLE_LVGL_TICK_PERIOD_MS 2
+static const char *TAG = "ESP_Panel";
 
 /**
  * @brief i2c master initialization
@@ -144,7 +101,7 @@ void ESP_Panel::lvgl_flush_cb(lv_disp_drv_t *drv, const lv_area_t *area, lv_colo
 
 void ESP_Panel::increase_lvgl_tick(void *arg) {
     /* Tell LVGL how many milliseconds has elapsed */
-    lv_tick_inc(EXAMPLE_LVGL_TICK_PERIOD_MS);
+    lv_tick_inc(LVGL_TICK_PERIOD_MS);
 }
 
 lv_disp_t *ESP_Panel::begin() {
@@ -159,9 +116,9 @@ lv_disp_t *ESP_Panel::begin() {
     assert(sem_gui_ready);
 #endif
 
-#if EXAMPLE_PIN_NUM_BK_LIGHT >= 0
+#if ESP_PANEL_USE_BL
     ESP_LOGI(TAG, "Turn off LCD backlight");
-    gpio_config_t bk_gpio_config = {.mode = GPIO_MODE_OUTPUT, .pin_bit_mask = 1ULL << EXAMPLE_PIN_NUM_BK_LIGHT};
+    gpio_config_t bk_gpio_config = {.mode = GPIO_MODE_OUTPUT, .pin_bit_mask = 1ULL << ESP_PANEL_LCD_IO_BL};
     ESP_ERROR_CHECK(gpio_config(&bk_gpio_config));
 #endif
 
@@ -171,9 +128,9 @@ lv_disp_t *ESP_Panel::begin() {
         .clk_src = LCD_CLK_SRC_DEFAULT,
         .timings =
             {
-                .pclk_hz = EXAMPLE_LCD_PIXEL_CLOCK_HZ,
-                .h_res = EXAMPLE_LCD_H_RES,
-                .v_res = EXAMPLE_LCD_V_RES,
+                .pclk_hz = ESP_PANEL_LCD_RGB_CLK_HZ,
+                .h_res = ESP_PANEL_LCD_H_RES,
+                .v_res = ESP_PANEL_LCD_V_RES,
                 // The following parameters should refer to LCD spec
                 .hsync_pulse_width = ESP_PANEL_LCD_RGB_HPW,
                 .hsync_back_porch = ESP_PANEL_LCD_RGB_HBP,
@@ -188,34 +145,34 @@ lv_disp_t *ESP_Panel::begin() {
 
             },
         .data_width = ESP_PANEL_LCD_RGB_DATA_WIDTH,
-        .num_fbs = EXAMPLE_LCD_NUM_FB,
+        .num_fbs = LCD_NUM_FB,
 #if CONFIG_DISPLAY_USE_BOUNCE_BUFFER
-        .bounce_buffer_size_px = 10 * EXAMPLE_LCD_H_RES,
+        .bounce_buffer_size_px = 10 * ESP_PANEL_LCD_H_RES,
 #endif
         .psram_trans_align = 64,
-        .hsync_gpio_num = EXAMPLE_PIN_NUM_HSYNC,
-        .vsync_gpio_num = EXAMPLE_PIN_NUM_VSYNC,
-        .de_gpio_num = EXAMPLE_PIN_NUM_DE,
-        .pclk_gpio_num = EXAMPLE_PIN_NUM_PCLK,
-        .disp_gpio_num = EXAMPLE_PIN_NUM_DISP_EN,
+        .hsync_gpio_num = ESP_PANEL_LCD_RGB_IO_HSYNC,
+        .vsync_gpio_num = ESP_PANEL_LCD_RGB_IO_VSYNC,
+        .de_gpio_num = ESP_PANEL_LCD_RGB_IO_DE,
+        .pclk_gpio_num = ESP_PANEL_LCD_RGB_IO_PCLK,
+        .disp_gpio_num = ESP_PANEL_LCD_RGB_IO_DISP,
         .data_gpio_nums =
             {
-                EXAMPLE_PIN_NUM_DATA0,
-                EXAMPLE_PIN_NUM_DATA1,
-                EXAMPLE_PIN_NUM_DATA2,
-                EXAMPLE_PIN_NUM_DATA3,
-                EXAMPLE_PIN_NUM_DATA4,
-                EXAMPLE_PIN_NUM_DATA5,
-                EXAMPLE_PIN_NUM_DATA6,
-                EXAMPLE_PIN_NUM_DATA7,
-                EXAMPLE_PIN_NUM_DATA8,
-                EXAMPLE_PIN_NUM_DATA9,
-                EXAMPLE_PIN_NUM_DATA10,
-                EXAMPLE_PIN_NUM_DATA11,
-                EXAMPLE_PIN_NUM_DATA12,
-                EXAMPLE_PIN_NUM_DATA13,
-                EXAMPLE_PIN_NUM_DATA14,
-                EXAMPLE_PIN_NUM_DATA15,
+                ESP_PANEL_LCD_RGB_IO_DATA0,
+                ESP_PANEL_LCD_RGB_IO_DATA1,
+                ESP_PANEL_LCD_RGB_IO_DATA2,
+                ESP_PANEL_LCD_RGB_IO_DATA3,
+                ESP_PANEL_LCD_RGB_IO_DATA4,
+                ESP_PANEL_LCD_RGB_IO_DATA5,
+                ESP_PANEL_LCD_RGB_IO_DATA6,
+                ESP_PANEL_LCD_RGB_IO_DATA7,
+                ESP_PANEL_LCD_RGB_IO_DATA8,
+                ESP_PANEL_LCD_RGB_IO_DATA9,
+                ESP_PANEL_LCD_RGB_IO_DATA10,
+                ESP_PANEL_LCD_RGB_IO_DATA11,
+                ESP_PANEL_LCD_RGB_IO_DATA12,
+                ESP_PANEL_LCD_RGB_IO_DATA13,
+                ESP_PANEL_LCD_RGB_IO_DATA14,
+                ESP_PANEL_LCD_RGB_IO_DATA15,
             },
         .flags =
             {
@@ -234,9 +191,9 @@ lv_disp_t *ESP_Panel::begin() {
     ESP_ERROR_CHECK(esp_lcd_panel_reset(panel_handle));
     ESP_ERROR_CHECK(esp_lcd_panel_init(panel_handle));
 
-#if EXAMPLE_PIN_NUM_BK_LIGHT >= 0
+#if ESP_PANEL_USE_BL
     ESP_LOGI(TAG, "Turn on LCD backlight");
-    gpio_set_level(EXAMPLE_PIN_NUM_BK_LIGHT, EXAMPLE_LCD_BK_LIGHT_ON_LEVEL);
+    gpio_set_level(ESP_PANEL_LCD_IO_BL, ESP_PANEL_LCD_BL_ON_LEVEL);
 #endif
 
     ESP_ERROR_CHECK(i2c_master_init());
@@ -263,8 +220,8 @@ lv_disp_t *ESP_Panel::begin() {
     /* Touch IO handle */
     ESP_ERROR_CHECK(esp_lcd_new_panel_io_i2c((esp_lcd_i2c_bus_handle_t)I2C_MASTER_NUM, &tp_io_config, &tp_io_handle));
     esp_lcd_touch_config_t tp_cfg = {
-        .x_max = EXAMPLE_LCD_V_RES,
-        .y_max = EXAMPLE_LCD_H_RES,
+        .x_max = ESP_PANEL_LCD_V_RES,
+        .y_max = ESP_PANEL_LCD_H_RES,
         .rst_gpio_num = GPIO_NUM_NC,
         .int_gpio_num = GPIO_NUM_NC,
         .flags =
@@ -286,23 +243,23 @@ lv_disp_t *ESP_Panel::begin() {
     ESP_LOGI(TAG, "Use frame buffers as LVGL draw buffers");
     ESP_ERROR_CHECK(esp_lcd_rgb_panel_get_frame_buffer(panel_handle, 2, &buf1, &buf2));
     // initialize LVGL draw buffers
-    lv_disp_draw_buf_init(&disp_buf, buf1, buf2, EXAMPLE_LCD_H_RES * EXAMPLE_LCD_V_RES);
+    lv_disp_draw_buf_init(&disp_buf, buf1, buf2, ESP_PANEL_LCD_H_RES * ESP_PANEL_LCD_V_RES);
 #else
-    size_t buf1size = EXAMPLE_LCD_H_RES * DISPLAY_BUFFER_LINES * sizeof(lv_color_t);
+    size_t buf1size = ESP_PANEL_LCD_H_RES * DISPLAY_BUFFER_LINES * sizeof(lv_color_t);
     ESP_LOGI(TAG, "Allocate separate LVGL draw buffers from PSRAM, available %d DMA capable %d, requesting %d",
              heap_caps_get_free_size(MALLOC_CAP_8BIT), heap_caps_get_free_size(MALLOC_CAP_DMA), buf1size);
-    buf1 = heap_caps_malloc(EXAMPLE_LCD_H_RES * DISPLAY_BUFFER_LINES * sizeof(lv_color_t), MALLOC_CAP_DMA);
+    buf1 = heap_caps_malloc(ESP_PANEL_LCD_H_RES * DISPLAY_BUFFER_LINES * sizeof(lv_color_t), MALLOC_CAP_DMA);
     assert(buf1);
-    // buf2 = heap_caps_malloc(EXAMPLE_LCD_H_RES * EXAMPLE_LCD_V_RES * sizeof(lv_color_t), MALLOC_CAP_SPIRAM);
+    // buf2 = heap_caps_malloc(ESP_PANEL_LCD_H_RES * ESP_PANEL_LCD_V_RES * sizeof(lv_color_t), MALLOC_CAP_SPIRAM);
     // assert(buf2);
     // initialize LVGL draw buffers
-    lv_disp_draw_buf_init(&disp_buf, buf1, NULL, EXAMPLE_LCD_H_RES * DISPLAY_BUFFER_LINES);
+    lv_disp_draw_buf_init(&disp_buf, buf1, NULL, ESP_PANEL_LCD_H_RES * DISPLAY_BUFFER_LINES);
 #endif  // CONFIG_DISPLAY_DOUBLE_FB
 
     ESP_LOGI(TAG, "Register display driver to LVGL");
     lv_disp_drv_init(&disp_drv);
-    disp_drv.hor_res = EXAMPLE_LCD_H_RES;
-    disp_drv.ver_res = EXAMPLE_LCD_V_RES;
+    disp_drv.hor_res = ESP_PANEL_LCD_H_RES;
+    disp_drv.ver_res = ESP_PANEL_LCD_V_RES;
     disp_drv.flush_cb = lvgl_flush_cb;
     disp_drv.draw_buf = &disp_buf;
     disp_drv.user_data = panel_handle;
@@ -327,7 +284,7 @@ lv_disp_t *ESP_Panel::begin() {
 
     esp_timer_handle_t lvgl_tick_timer = NULL;
     ESP_ERROR_CHECK(esp_timer_create(&lvgl_tick_timer_args, &lvgl_tick_timer));
-    ESP_ERROR_CHECK(esp_timer_start_periodic(lvgl_tick_timer, EXAMPLE_LVGL_TICK_PERIOD_MS * 1000));
+    ESP_ERROR_CHECK(esp_timer_start_periodic(lvgl_tick_timer, LVGL_TICK_PERIOD_MS * 1000));
 
     return disp;
 }
