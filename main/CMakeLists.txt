@@ -1,8 +1,8 @@
 idf_component_register(
-    SRCS "Queue.cpp" "main.cpp" "Application.cpp" "MQTTConnection.cpp" "support.cpp" "WifiConnection.cpp"
+    SRCS "CH422G.cpp" "Queue.cpp" "main.cpp" "Application.cpp" "MQTTConnection.cpp" "support.cpp" "WifiConnection.cpp"
     "lv_font_roboto_30.c" "lv_font_roboto_85.c" "LvglUI.cpp" "Messages.cpp" "LoadingUI.cpp" "ThermostatUI.cpp"
     "ESP_Panel.cpp"
-    INCLUDE_DIRS "." "../components/espressif__esp_lcd_touch_gt911/include"
+    INCLUDE_DIRS "."
 )
 
 if (CMAKE_COMPILER_IS_GNUCC)

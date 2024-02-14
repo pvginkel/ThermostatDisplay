@@ -5,6 +5,12 @@ dependencies:
       path: C:\Projects\ThermostatDisplay\components\espressif__esp_lcd_touch
       type: local
     version: 1.0.1
+  espressif__esp_lcd_touch_gt911:
+    component_hash: null
+    source:
+      path: C:\Projects\ThermostatDisplay\components\espressif__esp_lcd_touch_gt911
+      type: local
+    version: 1.0.1
   idf:
     component_hash: null
     source:
@@ -16,6 +22,6 @@ dependencies:
       service_url: https://api.components.espressif.com/
       type: service
     version: 8.2.0
-manifest_hash: 983caadf26e7ad8d0b7907d0731c348b85f15b330e7f878494f59a4defc6c66e
+manifest_hash: 7661adf879c6953fb866a42299fa4a41651a5f67a73a5dd28a432b14d90a00c1
 target: esp32s3
 version: 1.0.0
