@@ -1,0 +1,4 @@
+[submodule "LvglWindowsSimulator"]
+	path = LvglWindowsSimulator
+	url = https://github.com/pvginkel/lv_port_pc_visual_studio.git
+	branch = thermostat_display
