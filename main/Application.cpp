@@ -3,19 +3,9 @@
 #include "Application.h"
 
 #include "Messages.h"
+#include "driver/i2c.h"
 
 static const char *TAG = "Application";
-
-Application *application = nullptr;
-
-extern "C" {
-void app_run(lv_disp_t *disp) {
-    application = new Application();
-    application->run(disp);
-}
-
-void app_loop() { application->loop(); }
-}
 
 Application::Application()
     : _parent(nullptr),
@@ -24,7 +14,7 @@ Application::Application()
       _loadingUI(nullptr),
       _thermostatUI(nullptr) {}
 
-void Application::run(lv_disp_t *disp) {
+void Application::begin(lv_disp_t *disp) {
     _parent = lv_disp_get_scr_act(disp);
     lv_obj_set_style_bg_color(_parent, lv_color_white(), 0);
 
@@ -142,4 +132,4 @@ void Application::beginUI() {
     _thermostatUI->setState(_mqttConnection.getState());
 }
 
-void Application::loop() { _queue.process(); }
+void Application::process() { _queue.process(); }

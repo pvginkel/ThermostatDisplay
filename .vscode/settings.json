@@ -17,7 +17,11 @@
     "mutex": "cpp",
     "regex": "cpp",
     "cstdarg": "cpp",
-    "algorithm": "cpp"
+    "algorithm": "cpp",
+    "sdmmc_cmd.h": "c",
+    "sdmmc_types.h": "c",
+    "esp_vfs_fat.h": "c",
+    "wificonnection.h": "c"
   },
   "cSpell.words": ["LOGI", "Lvgl", "MQTT", "roboto", "setpoint"],
   "files.exclude": {

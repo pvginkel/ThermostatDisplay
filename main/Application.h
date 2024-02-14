@@ -17,10 +17,11 @@ class Application {
 public:
     Application();
 
-    void run(lv_disp_t* disp);
-    void loop();
+    void begin(lv_disp_t* disp);
+    void process();
 
 private:
+    void setupI2C();
     void setupFlash();
     void begin();
     void beginWifi();
