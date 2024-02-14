@@ -30,7 +30,7 @@
 #define EXAMPLE_MAX_CHAR_SIZE    64
 
 // The sample uses 160 (1/3d of 480), but we don't have that available.
-#define DISPLAY_BUFFER_LINES (480 / 20)
+#define DISPLAY_BUFFER_LINES (480 / 5)
 
 // Pin assignments can be set in menuconfig, see "SD SPI Example Configuration" menu.
 // You can also change the pin assignments here by changing the following 4 lines.
