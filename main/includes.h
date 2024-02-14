@@ -26,10 +26,12 @@ using namespace std;
 
 #include "cJSON.h"
 #include "driver/gpio.h"
+#include "driver/i2c.h"
 #include "esp_err.h"
 #include "esp_event.h"
 #include "esp_lcd_panel_ops.h"
 #include "esp_lcd_panel_rgb.h"
+#include "esp_lcd_touch_gt911.h"
 #include "esp_log.h"
 #include "esp_mac.h"
 #include "esp_system.h"

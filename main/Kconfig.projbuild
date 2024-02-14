@@ -76,4 +76,9 @@ menu "Display Configuration"
         default 34 if IDF_TARGET_ESP32S2
         default -1 if IDF_TARGET_ESP32S3
         default 1  # C3 and others
+
+    config DISPLAY_AUTO_OFF_MS
+        int "Turn off display after ms"
+        default 0
+        
 endmenu

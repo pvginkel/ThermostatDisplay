@@ -2,9 +2,9 @@
 
 #include "ESP_Panel.h"
 
+#include "CH422G.h"
 #include "ESP_Panel_Conf.h"
-#include "driver/i2c.h"
-#include "esp_lcd_touch_gt911.h"
+#include "I2CConf.h"
 
 // The sample uses 160 (1/3d of 480), but we don't have that available.
 #define DISPLAY_BUFFER_LINES (480 / 5)
@@ -17,17 +17,10 @@
 #define LCD_NUM_FB 1
 #endif  // CONFIG_DISPLAY_DOUBLE_FB
 
-#define I2C_MASTER_SCL_IO 9 /*!< GPIO number used for I2C master clock */
-#define I2C_MASTER_SDA_IO 8 /*!< GPIO number used for I2C master data  */
-#define I2C_MASTER_NUM                                                                                              \
-    I2C_NUM_0 /*!< I2C master i2c port number, the number of i2c peripheral interfaces available will depend on the \
-                 chip */
-#define I2C_MASTER_FREQ_HZ 400000   /*!< I2C master clock frequency */
-#define I2C_MASTER_TX_BUF_DISABLE 0 /*!< I2C master doesn't need buffer */
-#define I2C_MASTER_RX_BUF_DISABLE 0 /*!< I2C master doesn't need buffer */
-#define I2C_MASTER_TIMEOUT_MS 1000
-
 static const char *TAG = "ESP_Panel";
+
+ESP_Panel::ESP_Panel()
+    : _panel_handle(nullptr), _touch_handle(nullptr), _displayOffTimer(nullptr), _displayState(DisplayState::On) {}
 
 /**
  * @brief i2c master initialization
@@ -41,9 +34,10 @@ esp_err_t ESP_Panel::i2c_master_init() {
         .scl_io_num = I2C_MASTER_SCL_IO,
         .sda_pullup_en = GPIO_PULLUP_ENABLE,
         .scl_pullup_en = GPIO_PULLUP_ENABLE,
-        .master{
-            .clk_speed = I2C_MASTER_FREQ_HZ,
-        },
+        .master =
+            {
+                .clk_speed = I2C_MASTER_FREQ_HZ,
+            },
     };
 
     i2c_param_config(i2c_master_port, &conf);
@@ -58,17 +52,32 @@ void ESP_Panel::lvgl_touch_cb(lv_indev_drv_t *drv, lv_indev_data_t *data) {
     uint8_t touchpad_cnt = 0;
 
     /* Read touch controller data */
-    esp_lcd_touch_read_data((esp_lcd_touch_handle_t)drv->user_data);
+    esp_lcd_touch_read_data(_touch_handle);
 
     /* Get coordinates */
-    bool touchpad_pressed = esp_lcd_touch_get_coordinates((esp_lcd_touch_handle_t)drv->user_data, touchpad_x,
-                                                          touchpad_y, NULL, &touchpad_cnt, 1);
+    bool touchpad_pressed =
+        esp_lcd_touch_get_coordinates(_touch_handle, touchpad_x, touchpad_y, NULL, &touchpad_cnt, 1);
 
     if (touchpad_pressed && touchpad_cnt > 0) {
+        if (_displayState != DisplayState::On) {
+            if (_displayState == DisplayState::Off) {
+                _displayState = DisplayState::PendingOnFromTouch;
+            }
+            return;
+        }
+
+        resetDisplayOffTimer();
+
         data->point.x = touchpad_x[0];
         data->point.y = touchpad_y[0];
         data->state = LV_INDEV_STATE_PR;
     } else {
+        if (_displayState == DisplayState::OnPendingRelease) {
+            _displayState = DisplayState::On;
+
+            resetDisplayOffTimer();
+        }
+
         data->state = LV_INDEV_STATE_REL;
     }
 }
@@ -123,7 +132,6 @@ lv_disp_t *ESP_Panel::begin() {
 #endif
 
     ESP_LOGI(TAG, "Install RGB LCD panel driver");
-    esp_lcd_panel_handle_t panel_handle = NULL;
     esp_lcd_rgb_panel_config_t panel_config = {
         .clk_src = LCD_CLK_SRC_DEFAULT,
         .timings =
@@ -179,17 +187,17 @@ lv_disp_t *ESP_Panel::begin() {
                 .fb_in_psram = true,  // allocate frame buffer in PSRAM
             },
     };
-    ESP_ERROR_CHECK(esp_lcd_new_rgb_panel(&panel_config, &panel_handle));
+    ESP_ERROR_CHECK(esp_lcd_new_rgb_panel(&panel_config, &_panel_handle));
 
     ESP_LOGI(TAG, "Register event callbacks");
     esp_lcd_rgb_panel_event_callbacks_t cbs = {
         .on_vsync = on_vsync_event,
     };
-    ESP_ERROR_CHECK(esp_lcd_rgb_panel_register_event_callbacks(panel_handle, &cbs, &disp_drv));
+    ESP_ERROR_CHECK(esp_lcd_rgb_panel_register_event_callbacks(_panel_handle, &cbs, &disp_drv));
 
     ESP_LOGI(TAG, "Initialize RGB LCD panel");
-    ESP_ERROR_CHECK(esp_lcd_panel_reset(panel_handle));
-    ESP_ERROR_CHECK(esp_lcd_panel_init(panel_handle));
+    ESP_ERROR_CHECK(esp_lcd_panel_reset(_panel_handle));
+    ESP_ERROR_CHECK(esp_lcd_panel_init(_panel_handle));
 
 #if ESP_PANEL_USE_BL
     ESP_LOGI(TAG, "Turn on LCD backlight");
@@ -199,17 +207,8 @@ lv_disp_t *ESP_Panel::begin() {
     ESP_ERROR_CHECK(i2c_master_init());
     ESP_LOGI(TAG, "I2C initialized successfully");
 
-    uint8_t write_buf = 0x01;
+    set_ch422g_pins(IO_EXPANDER_TOUCH_PANEL_RESET | IO_EXPANDER_LCD_BACKLIGHT | IO_EXPANDER_LCD_RESET);
 
-    auto ret =
-        i2c_master_write_to_device(I2C_MASTER_NUM, 0x24, &write_buf, 1, I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS);
-    ESP_LOGI(TAG, "0x48 0x01 ret is %d", ret);
-
-    write_buf = 0x0E;
-    ret = i2c_master_write_to_device(I2C_MASTER_NUM, 0x38, &write_buf, 1, I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS);
-    ESP_LOGI(TAG, "0x70 0x00 ret is %d", ret);
-
-    esp_lcd_touch_handle_t tp = NULL;
     esp_lcd_panel_io_handle_t tp_io_handle = NULL;
 
     ESP_LOGI(TAG, "Initialize I2C");
@@ -233,7 +232,7 @@ lv_disp_t *ESP_Panel::begin() {
     };
     /* Initialize touch */
     ESP_LOGI(TAG, "Initialize touch controller GT911");
-    ESP_ERROR_CHECK(esp_lcd_touch_new_i2c_gt911(tp_io_handle, &tp_cfg, &tp));
+    ESP_ERROR_CHECK(esp_lcd_touch_new_i2c_gt911(tp_io_handle, &tp_cfg, &_touch_handle));
 
     ESP_LOGI(TAG, "Initialize LVGL library");
     lv_init();
@@ -241,7 +240,7 @@ lv_disp_t *ESP_Panel::begin() {
 #if CONFIG_DISPLAY_DOUBLE_FB
     void *buf2 = NULL;
     ESP_LOGI(TAG, "Use frame buffers as LVGL draw buffers");
-    ESP_ERROR_CHECK(esp_lcd_rgb_panel_get_frame_buffer(panel_handle, 2, &buf1, &buf2));
+    ESP_ERROR_CHECK(esp_lcd_rgb_panel_get_frame_buffer(_panel_handle, 2, &buf1, &buf2));
     // initialize LVGL draw buffers
     lv_disp_draw_buf_init(&disp_buf, buf1, buf2, ESP_PANEL_LCD_H_RES * ESP_PANEL_LCD_V_RES);
 #else
@@ -262,7 +261,7 @@ lv_disp_t *ESP_Panel::begin() {
     disp_drv.ver_res = ESP_PANEL_LCD_V_RES;
     disp_drv.flush_cb = lvgl_flush_cb;
     disp_drv.draw_buf = &disp_buf;
-    disp_drv.user_data = panel_handle;
+    disp_drv.user_data = _panel_handle;
 #if CONFIG_DISPLAY_DOUBLE_FB
     disp_drv.full_refresh =
         true;  // the full_refresh mode can maintain the synchronization between the two frame buffers
@@ -277,8 +276,10 @@ lv_disp_t *ESP_Panel::begin() {
     lv_indev_drv_init(&indev_drv);
     indev_drv.type = LV_INDEV_TYPE_POINTER;
     indev_drv.disp = disp;
-    indev_drv.read_cb = lvgl_touch_cb;
-    indev_drv.user_data = tp;
+    indev_drv.read_cb = [](lv_indev_drv_t *drv, lv_indev_data_t *data) {
+        ((ESP_Panel *)drv->user_data)->lvgl_touch_cb(drv, data);
+    };
+    indev_drv.user_data = this;
 
     lv_indev_drv_register(&indev_drv);
 
@@ -286,12 +287,60 @@ lv_disp_t *ESP_Panel::begin() {
     ESP_ERROR_CHECK(esp_timer_create(&lvgl_tick_timer_args, &lvgl_tick_timer));
     ESP_ERROR_CHECK(esp_timer_start_periodic(lvgl_tick_timer, LVGL_TICK_PERIOD_MS * 1000));
 
+    const esp_timer_create_args_t displayOffTimerArgs = {
+        .callback = [](void *arg) { ((ESP_Panel *)arg)->displayOffEvent(); },
+        .arg = this,
+        .name = "displayOffTimer",
+    };
+
+#if CONFIG_DISPLAY_AUTO_OFF_MS > 0
+    ESP_ERROR_CHECK(esp_timer_create(&displayOffTimerArgs, &_displayOffTimer));
+    ESP_ERROR_CHECK(esp_timer_start_once(_displayOffTimer, CONFIG_DISPLAY_AUTO_OFF_MS * 1000));
+    ESP_LOGI(TAG, "Starting off timer");
+#endif
+
     return disp;
 }
 
-void ESP_Panel::process() {  // raise the task priority of LVGL and/or reduce the handler period can improve the
-                             // performance
+void ESP_Panel::process() {
+    // raise the task priority of LVGL and/or reduce the handler period can improve the
+    // performance
+
+    switch (_displayState) {
+        case DisplayState::PendingOn:
+        case DisplayState::PendingOnFromTouch:
+            ESP_LOGI(TAG, "Turning display on");
+
+            _displayState =
+                _displayState == DisplayState::PendingOnFromTouch ? DisplayState::OnPendingRelease : DisplayState::On;
+
+            set_ch422g_pins(IO_EXPANDER_TOUCH_PANEL_RESET | IO_EXPANDER_LCD_BACKLIGHT | IO_EXPANDER_LCD_RESET);
+            break;
+
+        case DisplayState::PendingOff:
+            ESP_LOGI(TAG, "Turning display off");
+
+            _displayState = DisplayState::Off;
+
+            set_ch422g_pins(IO_EXPANDER_TOUCH_PANEL_RESET | IO_EXPANDER_LCD_RESET);
+            break;
+    }
+
     vTaskDelay(pdMS_TO_TICKS(10));
+
     // The task running lv_timer_handler should have lower priority than that running `lv_tick_inc`
     lv_timer_handler();
 }
+
+void ESP_Panel::resetDisplayOffTimer() {
+#if CONFIG_DISPLAY_AUTO_OFF_MS > 0
+    auto ret = esp_timer_restart(_displayOffTimer, CONFIG_DISPLAY_AUTO_OFF_MS * 1000);
+    if (ret == ESP_ERR_INVALID_STATE) {
+        ESP_ERROR_CHECK(esp_timer_start_once(_displayOffTimer, CONFIG_DISPLAY_AUTO_OFF_MS * 1000));
+    } else {
+        ESP_ERROR_CHECK(ret);
+    }
+#endif
+}
+
+void ESP_Panel::displayOffEvent() { _displayState = DisplayState::PendingOff; }

@@ -1,11 +1,17 @@
 #pragma once
 
 class ESP_Panel {  // we use two semaphores to sync the VSYNC event and the LVGL task, to avoid potential tearing effect
-    static void lvgl_touch_cb(lv_indev_drv_t *drv, lv_indev_data_t *data);
+    enum class DisplayState { On, Off, PendingOn, PendingOnFromTouch, PendingOff, OnPendingRelease };
+
     static bool on_vsync_event(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *event_data,
                                void *user_data);
     static void lvgl_flush_cb(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t *color_map);
     static void increase_lvgl_tick(void *arg);
+
+    esp_lcd_panel_handle_t _panel_handle;
+    esp_lcd_touch_handle_t _touch_handle;
+    esp_timer_handle_t _displayOffTimer;
+    DisplayState _displayState;
 
 #if CONFIG_DISPLAY_AVOID_TEAR_EFFECT_WITH_SEM
     SemaphoreHandle_t sem_vsync_end;
@@ -13,9 +19,14 @@ class ESP_Panel {  // we use two semaphores to sync the VSYNC event and the LVGL
 #endif
 
 public:
+    ESP_Panel();
+
     lv_disp_t *begin();
     void process();
 
 private:
     esp_err_t i2c_master_init();
+    void resetDisplayOffTimer();
+    void displayOffEvent();
+    void lvgl_touch_cb(lv_indev_drv_t *drv, lv_indev_data_t *data);
 };
