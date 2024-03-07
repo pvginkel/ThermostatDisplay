@@ -10,9 +10,10 @@ static const char *TAG = "Application";
 Application::Application()
     : _parent(nullptr),
       _wifiConnection(&_queue),
-      _mqttConnection(&_queue),
+      _mqttConnection(nullptr),
       _loadingUI(nullptr),
-      _thermostatUI(nullptr) {}
+      _thermostatUI(nullptr),
+      _configuration(nullptr) {}
 
 void Application::begin(lv_disp_t *disp) {
     _parent = lv_disp_get_scr_act(disp);
@@ -77,6 +78,8 @@ void Application::beginWifi() {
 void Application::beginWifiAvailable() {
     ESP_LOGI(TAG, "WiFi available, starting other services");
 
+    _configuration = new DeviceConfiguration();
+
     _otaManager.begin();
 
     beginMQTT();
@@ -85,7 +88,9 @@ void Application::beginWifiAvailable() {
 void Application::beginMQTT() {
     ESP_LOGI(TAG, "Connecting to MQTT / Home Assistant");
 
-    _mqttConnection.onStateChanged(
+    _mqttConnection = new MQTTConnection(&_queue, *_configuration);
+
+    _mqttConnection->onStateChanged(
         [](auto state, uintptr_t data) {
             auto self = (Application *)data;
 
@@ -106,7 +111,7 @@ void Application::beginMQTT() {
         },
         (uintptr_t)this);
 
-    _mqttConnection.begin();
+    _mqttConnection->begin();
 }
 
 void Application::beginUI() {
@@ -114,13 +119,13 @@ void Application::beginUI() {
 
     _thermostatUI = new ThermostatUI(_parent);
 
-    _mqttConnection.onThermostatStateChanged(
+    _mqttConnection->onThermostatStateChanged(
         [](auto data) {
             ESP_LOGI(TAG, "Sending new state from MQTT to the thermostat");
 
             auto self = (Application *)data;
 
-            self->_thermostatUI->setState(self->_mqttConnection.getState());
+            self->_thermostatUI->setState(self->_mqttConnection->getState());
         },
         (uintptr_t)this);
 
@@ -130,14 +135,14 @@ void Application::beginUI() {
 
             auto self = (Application *)data;
 
-            auto state = self->_mqttConnection.getState();
+            auto state = self->_mqttConnection->getState();
             state.setpoint = setpoint;
-            self->_mqttConnection.setState(state);
+            self->_mqttConnection->setState(state);
         },
         (uintptr_t)this);
 
     _thermostatUI->begin();
-    _thermostatUI->setState(_mqttConnection.getState());
+    _thermostatUI->setState(_mqttConnection->getState());
 }
 
 void Application::process() { _queue.process(); }

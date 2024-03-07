@@ -17,11 +17,8 @@ menu "Device Configuration"
     config MQTT_PASSWORD
         string "MQTT password"
 
-    config DEVICE_NAME
-        string "Name of the device"
-
-    config DEVICE_ENTITY_ID
-        string "Entity ID of the device"
+    config DEVICE_CONFIG_ENDPOINT
+        string "Device config endpoint (%s becomes MAC address)"
 
 endmenu
 

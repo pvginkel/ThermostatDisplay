@@ -26,9 +26,6 @@ string format(const char* fmt, ...);
     } while (0)
 #endif
 
-bool iequals(const string& a, const string& b);
-int hextoi(char c);
-
 #define ESP_TIMER_MS(v) ((v) * 1000)
 #define ESP_TIMER_SECONDS(v) ESP_TIMER_MS((v) * 1000)
 
@@ -40,3 +37,7 @@ int hextoi(char c);
             goto label;                                                    \
         }                                                                  \
     } while (0)
+
+bool iequals(const string& a, const string& b);
+int hextoi(char c);
+esp_err_t esp_http_download_string(const esp_http_client_config_t& config, string& target, size_t maxLength = 0);

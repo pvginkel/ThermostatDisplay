@@ -10,11 +10,12 @@
 class Application {
     lv_obj_t* _parent;
     WifiConnection _wifiConnection;
-    MQTTConnection _mqttConnection;
+    MQTTConnection* _mqttConnection;
     OTAManager _otaManager;
     LoadingUI* _loadingUI;
     ThermostatUI* _thermostatUI;
     Queue _queue;
+    DeviceConfiguration* _configuration;
 
 public:
     Application();

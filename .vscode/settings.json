@@ -21,7 +21,10 @@
     "sdmmc_cmd.h": "c",
     "sdmmc_types.h": "c",
     "esp_vfs_fat.h": "c",
-    "wificonnection.h": "c"
+    "wificonnection.h": "c",
+    "atomic": "cpp",
+    "memory_resource": "cpp",
+    "stop_token": "cpp"
   },
   "cSpell.words": ["LOGI", "Lvgl", "MQTT", "roboto", "setpoint"],
   "files.exclude": {

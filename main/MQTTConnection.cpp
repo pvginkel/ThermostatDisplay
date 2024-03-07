@@ -10,16 +10,18 @@ constexpr auto QOS_MAX_ONE = 0;      // Send at most one.
 constexpr auto QOS_MIN_ONE = 1;      // Send at least one.
 constexpr auto QOS_EXACTLY_ONE = 2;  // Send exactly one.
 
-MQTTConnection::MQTTConnection(Queue *synchronizationQueue)
-    : _synchronizationQueue(synchronizationQueue),
+MQTTConnection::MQTTConnection(Queue *synchronizationQueue, const DeviceConfiguration &configuration)
+    : _configuration(configuration),
+      _synchronizationQueue(synchronizationQueue),
       _deviceId(getDeviceId()),
-      _modeTopic(format("%s/%s/set/mode", TOPIC_PREFIX, CONFIG_DEVICE_NAME)),
-      _localTemperatureTopic(format("%s/%s/set/local_temperature", TOPIC_PREFIX, CONFIG_DEVICE_NAME)),
-      _humidityTopic(format("%s/%s/set/local_humidity", TOPIC_PREFIX, CONFIG_DEVICE_NAME)),
-      _setpointTopic(format("%s/%s/set/setpoint", TOPIC_PREFIX, CONFIG_DEVICE_NAME)),
-      _heatingTopic(format("%s/%s/set/heating", TOPIC_PREFIX, CONFIG_DEVICE_NAME)),
-      _entityTopic(format("%s/%s", TOPIC_PREFIX, CONFIG_DEVICE_NAME)),
-      _stateTopic(format("%s/%s/state", TOPIC_PREFIX, CONFIG_DEVICE_NAME)) {}
+      _modeTopic(format("%s/%s/set/mode", TOPIC_PREFIX, configuration.getDeviceName().c_str())),
+      _localTemperatureTopic(
+          format("%s/%s/set/local_temperature", TOPIC_PREFIX, configuration.getDeviceName().c_str())),
+      _humidityTopic(format("%s/%s/set/local_humidity", TOPIC_PREFIX, configuration.getDeviceName().c_str())),
+      _setpointTopic(format("%s/%s/set/setpoint", TOPIC_PREFIX, configuration.getDeviceName().c_str())),
+      _heatingTopic(format("%s/%s/set/heating", TOPIC_PREFIX, configuration.getDeviceName().c_str())),
+      _entityTopic(format("%s/%s", TOPIC_PREFIX, configuration.getDeviceName().c_str())),
+      _stateTopic(format("%s/%s/state", TOPIC_PREFIX, configuration.getDeviceName().c_str())) {}
 
 void MQTTConnection::begin() {
     esp_mqtt5_connection_property_config_t connect_property = {
@@ -259,7 +261,7 @@ void MQTTConnection::publishDiscovery() {
 
     cJSON_AddStringToObject(device, "manufacturer", DEVICE_MANUFACTURER);
     cJSON_AddStringToObject(device, "model", DEVICE_MODEL);
-    cJSON_AddStringToObject(device, "name", CONFIG_DEVICE_NAME);
+    cJSON_AddStringToObject(device, "name", _configuration.getDeviceName().c_str());
 
     cJSON_AddStringToObject(root, "device_class", "temperature");
     cJSON_AddNumberToObject(root, "max_temp", 35);
@@ -273,7 +275,7 @@ void MQTTConnection::publishDiscovery() {
     cJSON_AddItemToArray(modes, cJSON_CreateString("heat"));
 
     cJSON_AddNullToObject(root, "name");
-    cJSON_AddStringToObject(root, "object_id", CONFIG_DEVICE_ENTITY_ID);
+    cJSON_AddStringToObject(root, "object_id", _configuration.getDeviceEntityId().c_str());
     cJSON_AddNumberToObject(root, "temp_step", 0.5);
     cJSON_AddStringToObject(root, "temperature_command_topic", _setpointTopic.c_str());
     cJSON_AddStringToObject(root, "temperature_state_template", "{{ value_json.setpoint }}");

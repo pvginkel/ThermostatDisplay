@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DeviceConfiguration.h"
 #include "ThermostatState.h"
 
 struct MQTTConnectionState {
@@ -11,6 +12,7 @@ class MQTTConnection {
 
     static string getDeviceId();
 
+    const DeviceConfiguration &_configuration;
     Queue *_synchronizationQueue;
     string _deviceId;
     esp_mqtt_client_handle_t _client;
@@ -26,7 +28,7 @@ class MQTTConnection {
     Callback _thermostatStateChanged;
 
 public:
-    MQTTConnection(Queue *synchronizationQueue);
+    MQTTConnection(Queue *synchronizationQueue, const DeviceConfiguration &configuration);
 
     void begin();
     void onStateChanged(CallbackArg<MQTTConnectionState>::Func func, uintptr_t data = 0) {
