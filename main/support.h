@@ -27,3 +27,16 @@ string format(const char* fmt, ...);
 #endif
 
 bool iequals(const string& a, const string& b);
+int hextoi(char c);
+
+#define ESP_TIMER_MS(v) ((v) * 1000)
+#define ESP_TIMER_SECONDS(v) ESP_TIMER_MS((v) * 1000)
+
+#define ESP_CHECK_EARLY_EXIT(e, label)                                  \
+    do {                                                                \
+        auto err_ = (e);                                                \
+        if (err_ != ESP_OK) {                                           \
+            ESP_LOGE(TAG, #e " failed with %s", esp_err_to_name(err_)); \
+            goto label;                                                 \
+        }                                                               \
+    } while (0);

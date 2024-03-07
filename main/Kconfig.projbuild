@@ -25,6 +25,21 @@ menu "Device Configuration"
 
 endmenu
 
+menu "OTA Configuration"
+
+    config OTA_ENDPOINT
+        string "OTA endpoint"
+
+    config OTA_CHECK_INTERVAL
+        int "OTA check Interval in seconds"
+        default 300
+
+    config OTA_RECV_TIMEOUT
+        int "OTA receive timeout in ms"
+        default 15000
+
+endmenu
+
 menu "Display Configuration"
     config DISPLAY_DOUBLE_FB
         bool "Use double Frame Buffer"

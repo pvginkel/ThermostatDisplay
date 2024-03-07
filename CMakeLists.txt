@@ -1,4 +1,4 @@
 cmake_minimum_required(VERSION 3.16)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
-project(esp32-s3-touch-lcd-4.3)
+project(esp32-thermostat-display)

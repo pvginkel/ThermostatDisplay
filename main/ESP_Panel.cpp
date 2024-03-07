@@ -285,7 +285,7 @@ lv_disp_t *ESP_Panel::begin() {
 
     esp_timer_handle_t lvgl_tick_timer = NULL;
     ESP_ERROR_CHECK(esp_timer_create(&lvgl_tick_timer_args, &lvgl_tick_timer));
-    ESP_ERROR_CHECK(esp_timer_start_periodic(lvgl_tick_timer, LVGL_TICK_PERIOD_MS * 1000));
+    ESP_ERROR_CHECK(esp_timer_start_periodic(lvgl_tick_timer, ESP_TIMER_MS(LVGL_TICK_PERIOD_MS)));
 
     const esp_timer_create_args_t displayOffTimerArgs = {
         .callback = [](void *arg) { ((ESP_Panel *)arg)->displayOffEvent(); },
@@ -295,7 +295,7 @@ lv_disp_t *ESP_Panel::begin() {
 
 #if CONFIG_DISPLAY_AUTO_OFF_MS > 0
     ESP_ERROR_CHECK(esp_timer_create(&displayOffTimerArgs, &_displayOffTimer));
-    ESP_ERROR_CHECK(esp_timer_start_once(_displayOffTimer, CONFIG_DISPLAY_AUTO_OFF_MS * 1000));
+    ESP_ERROR_CHECK(esp_timer_start_once(_displayOffTimer, ESP_TIMER_MS(CONFIG_DISPLAY_AUTO_OFF_MS)));
     ESP_LOGI(TAG, "Starting off timer");
 #endif
 

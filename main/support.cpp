@@ -36,3 +36,16 @@ static bool ichar_equals(char a, char b) {
 bool iequals(const string& a, const string& b) {
     return a.size() == b.size() && std::equal(a.begin(), a.end(), b.begin(), ichar_equals);
 }
+
+int hextoi(char c) {
+    if (c >= '0' && c <= '9') {
+        return c - '0';
+    }
+    if (c >= 'A' && c <= 'F') {
+        return 10 + (c - 'A');
+    }
+    if (c >= 'a' && c <= 'f') {
+        return 10 + (c - 'a');
+    }
+    return -1;
+}

@@ -61,7 +61,7 @@ void Application::beginWifi() {
             if (state.connected) {
                 self->_loadingUI->setTitle(Messages::connectingToHomeAssistant);
 
-                self->beginMQTT();
+                self->beginWifiAvailable();
             } else {
                 self->_loadingUI->setError(Messages::failedToConnect);
                 self->_loadingUI->setState(LoadingUIState::Error);
@@ -72,6 +72,14 @@ void Application::beginWifi() {
         (uintptr_t)this);
 
     _wifiConnection.begin();
+}
+
+void Application::beginWifiAvailable() {
+    ESP_LOGI(TAG, "WiFi available, starting other services");
+
+    _otaManager.begin();
+
+    beginMQTT();
 }
 
 void Application::beginMQTT() {
