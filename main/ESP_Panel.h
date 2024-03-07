@@ -23,6 +23,7 @@ public:
 
     lv_disp_t *begin();
     void process();
+    void displayOn();
 
 private:
     esp_err_t i2c_master_init();

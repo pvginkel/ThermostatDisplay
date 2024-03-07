@@ -9,7 +9,7 @@ void app_main(void) {
 
     auto display = panel.begin();
 
-    Application application;
+    Application application(panel);
 
     application.begin(display);
 

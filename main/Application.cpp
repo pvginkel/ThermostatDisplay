@@ -7,15 +7,28 @@
 
 static const char *TAG = "Application";
 
-Application::Application()
-    : _parent(nullptr),
+Application::Application(ESP_Panel &panel)
+    : _panel(panel),
+      _parent(nullptr),
       _wifiConnection(&_queue),
       _mqttConnection(nullptr),
       _loadingUI(nullptr),
       _thermostatUI(nullptr),
-      _configuration(nullptr) {}
+      _configuration(nullptr),
+      _motionSensor(&_queue) {}
 
 void Application::begin(lv_disp_t *disp) {
+    ESP_LOGI(TAG, "Setting up motion sensor");
+
+    _motionSensor.onTriggered(
+        [](auto data) {
+            ESP_LOGI(TAG, "Turning display on because of motion");
+            ((Application *)data)->_panel.displayOn();
+        },
+        (uintptr_t)this);
+
+    _motionSensor.begin();
+
     _parent = lv_disp_get_scr_act(disp);
     lv_obj_set_style_bg_color(_parent, lv_color_white(), 0);
 

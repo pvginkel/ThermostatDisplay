@@ -332,6 +332,12 @@ void ESP_Panel::process() {
     lv_timer_handler();
 }
 
+void ESP_Panel::displayOn() {
+    if (_displayState == DisplayState::Off) {
+        _displayState = DisplayState::PendingOn;
+    }
+}
+
 void ESP_Panel::resetDisplayOffTimer() {
 #if CONFIG_DISPLAY_AUTO_OFF_MS > 0
     auto ret = esp_timer_restart(_displayOffTimer, CONFIG_DISPLAY_AUTO_OFF_MS * 1000);

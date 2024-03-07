@@ -1,13 +1,16 @@
 #pragma once
 
+#include "ESP_Panel.h"
 #include "LoadingUI.h"
 #include "MQTTConnection.h"
+#include "MotionSensor.h"
 #include "OTAManager.h"
 #include "Queue.h"
 #include "ThermostatUI.h"
 #include "WifiConnection.h"
 
 class Application {
+    ESP_Panel& _panel;
     lv_obj_t* _parent;
     WifiConnection _wifiConnection;
     MQTTConnection* _mqttConnection;
@@ -16,9 +19,10 @@ class Application {
     ThermostatUI* _thermostatUI;
     Queue _queue;
     DeviceConfiguration* _configuration;
+    MotionSensor _motionSensor;
 
 public:
-    Application();
+    Application(ESP_Panel& panel);
 
     void begin(lv_disp_t* disp);
     void process();
