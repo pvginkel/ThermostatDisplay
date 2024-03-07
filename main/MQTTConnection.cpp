@@ -61,7 +61,7 @@ void MQTTConnection::begin() {
                         .topic = _stateTopic.c_str(),
                         .msg = lastWillMessage,
                         .msg_len = strlen(lastWillMessage),
-                        .qos = 1,
+                        .qos = QOS_MIN_ONE,
                         .retain = true,
                     },
                 .protocol_ver = MQTT_PROTOCOL_V_5,
@@ -292,7 +292,7 @@ void MQTTConnection::publishDiscovery() {
 }
 
 void MQTTConnection::setOnline() {
-    ESP_ERROR_ASSERT(esp_mqtt_client_publish(_client, _stateTopic.c_str(), "online", 0, QOS_MIN_ONE, false) >= 0);
+    ESP_ERROR_ASSERT(esp_mqtt_client_publish(_client, _stateTopic.c_str(), "online", 0, QOS_MIN_ONE, true) >= 0);
 }
 
 void MQTTConnection::setState(ThermostatState &state, bool force) {
