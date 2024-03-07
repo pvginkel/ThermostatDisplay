@@ -58,7 +58,7 @@ bool OTAManager::installUpdate() {
 
     auto client = esp_http_client_init(&config);
 
-    ESP_CHECK_EARLY_EXIT(esp_http_client_open(client, 0), end);
+    ESP_ERROR_CHECK_JUMP(esp_http_client_open(client, 0), end);
 
     esp_http_client_fetch_headers(client);
 
@@ -99,7 +99,7 @@ bool OTAManager::installUpdate() {
                    sizeof(esp_app_desc_t));
 
             esp_app_desc_t runningAppInfo;
-            ESP_CHECK_EARLY_EXIT(esp_ota_get_partition_description(runningPartition, &runningAppInfo), end);
+            ESP_ERROR_CHECK_JUMP(esp_ota_get_partition_description(runningPartition, &runningAppInfo), end);
 
             ESP_LOGI(TAG, "New firmware version: %s, current %s", newAppInfo.version, runningAppInfo.version);
 
@@ -112,7 +112,7 @@ bool OTAManager::installUpdate() {
 
             if (lastInvalidApp != nullptr) {
                 esp_app_desc_t invalidAppInfo;
-                ESP_CHECK_EARLY_EXIT(esp_ota_get_partition_description(lastInvalidApp, &invalidAppInfo), end);
+                ESP_ERROR_CHECK_JUMP(esp_ota_get_partition_description(lastInvalidApp, &invalidAppInfo), end);
 
                 ESP_LOGI(TAG, "Last invalid firmware version: %s", invalidAppInfo.version);
 
@@ -123,14 +123,14 @@ bool OTAManager::installUpdate() {
                 }
             }
 
-            ESP_CHECK_EARLY_EXIT(esp_ota_begin(updatePartition, OTA_WITH_SEQUENTIAL_WRITES, &updateHandle), end);
+            ESP_ERROR_CHECK_JUMP(esp_ota_begin(updatePartition, OTA_WITH_SEQUENTIAL_WRITES, &updateHandle), end);
 
             otaBusy = true;
 
             ESP_LOGI(TAG, "Downloading new firmware");
         }
 
-        ESP_CHECK_EARLY_EXIT(esp_ota_write(updateHandle, (const void *)buffer, read), end);
+        ESP_ERROR_CHECK_JUMP(esp_ota_write(updateHandle, (const void *)buffer, read), end);
 
         firmwareSize += read;
 
@@ -142,11 +142,11 @@ bool OTAManager::installUpdate() {
         goto end;
     }
 
-    ESP_CHECK_EARLY_EXIT(esp_ota_end(updateHandle), end);
+    ESP_ERROR_CHECK_JUMP(esp_ota_end(updateHandle), end);
 
     otaBusy = false;
 
-    ESP_CHECK_EARLY_EXIT(esp_ota_set_boot_partition(updatePartition), end);
+    ESP_ERROR_CHECK_JUMP(esp_ota_set_boot_partition(updatePartition), end);
 
     firmwareInstalled = true;
 

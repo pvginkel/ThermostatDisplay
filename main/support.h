@@ -32,11 +32,11 @@ int hextoi(char c);
 #define ESP_TIMER_MS(v) ((v) * 1000)
 #define ESP_TIMER_SECONDS(v) ESP_TIMER_MS((v) * 1000)
 
-#define ESP_CHECK_EARLY_EXIT(e, label)                                  \
-    do {                                                                \
-        auto err_ = (e);                                                \
-        if (err_ != ESP_OK) {                                           \
-            ESP_LOGE(TAG, #e " failed with %s", esp_err_to_name(err_)); \
-            goto label;                                                 \
-        }                                                               \
-    } while (0);
+#define ESP_ERROR_CHECK_JUMP(x, label)                                     \
+    do {                                                                   \
+        esp_err_t err_rc_ = (x);                                           \
+        if (unlikely(err_rc_ != ESP_OK)) {                                 \
+            ESP_LOGE(TAG, #x " failed with %s", esp_err_to_name(err_rc_)); \
+            goto label;                                                    \
+        }                                                                  \
+    } while (0)
