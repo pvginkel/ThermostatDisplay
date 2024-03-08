@@ -99,7 +99,9 @@ void Application::beginWifiAvailable() {
         return;
     }
 
-    _otaManager.begin();
+    if (_configuration.getEnableOTA()) {
+        _otaManager.begin();
+    }
 
     beginMQTT();
 }
