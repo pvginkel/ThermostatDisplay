@@ -23,6 +23,7 @@ class ThermostatUI : public LvglUI {
 
 public:
     ThermostatUI(lv_obj_t* parent);
+    const ThermostatState& getState() const { return _state; }
     void setState(const ThermostatState& state);
     void onSetpointChanged(CallbackArg<double>::Func func, uintptr_t data) { _setpointChanged.set(func, data); }
 

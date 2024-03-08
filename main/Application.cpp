@@ -147,7 +147,14 @@ void Application::beginUI() {
 
             auto self = (Application *)data;
 
-            self->_thermostatUI->setState(self->_mqttConnection->getState());
+            auto newState = self->_mqttConnection->getState();
+            auto setpointChanged = self->_thermostatUI->getState().setpoint != newState.setpoint;
+
+            self->_thermostatUI->setState(newState);
+
+            if (setpointChanged) {
+                self->_panel.displayOn();
+            }
         },
         (uintptr_t)this);
 
