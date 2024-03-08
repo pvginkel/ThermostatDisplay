@@ -9,10 +9,11 @@ class ThermostatUI : public LvglUI {
 
     lv_style_t _temperatureButtonStyle;
     lv_style_t _normalLabelStyle;
-    lv_style_t _largeLabelStyle;
+    lv_style_t _largeDigitsLabelStyle;
     lv_obj_t* _stateLabel;
     ThermostatState _state;
     lv_obj_t* _setpointLabel;
+    lv_obj_t* _setpointUnitLabel;
     lv_obj_t* _setpointFractionLabel;
     lv_obj_t* _localTemperatureLabel;
     lv_obj_t* _setpointArc;

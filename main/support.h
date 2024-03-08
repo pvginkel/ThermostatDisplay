@@ -41,11 +41,14 @@ string format(const char* fmt, ...);
 bool iequals(const string& a, const string& b);
 int hextoi(char c);
 
+void lv_label_get_text_size(lv_point_t* size_res, const lv_obj_t* obj, lv_coord_t letter_space, lv_coord_t line_space,
+                            lv_coord_t max_width, lv_text_flag_t flag);
+
 #ifdef LV_SIMULATOR
 
 #define lv_obj_set_style_bg_img_src lv_obj_set_style_bg_image_src
 
-lv_obj_t* lv_spinner_create(lv_obj_t * parent, uint32_t t, uint32_t angle);
+lv_obj_t* lv_spinner_create(lv_obj_t* parent, uint32_t t, uint32_t angle);
 
 #else
 

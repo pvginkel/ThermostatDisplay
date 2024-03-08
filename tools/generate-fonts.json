@@ -1,7 +1,7 @@
 [
   {
     "name": "lv_font_roboto_{size}",
-    "size": [30, 85],
+    "size": 40,
     "fonts": [
       {
         "file": "Roboto-Regular.ttf",
@@ -14,6 +14,16 @@
       {
         "file": "fa-solid-900.ttf",
         "range": "0xf2c9"
+      }
+    ]
+  },
+  {
+    "name": "lv_font_roboto_{size}_digits",
+    "size": 100,
+    "fonts": [
+      {
+        "file": "Roboto-Regular.ttf",
+        "range": "48-57"
       }
     ]
   }

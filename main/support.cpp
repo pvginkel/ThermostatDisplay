@@ -50,6 +50,16 @@ int hextoi(char c) {
     return -1;
 }
 
+void lv_label_get_text_size(lv_point_t* size_res, const lv_obj_t* obj, lv_coord_t letter_space, lv_coord_t line_space,
+    lv_coord_t max_width, lv_text_flag_t flag)
+{
+    const auto text = lv_label_get_text(obj);
+    const auto font = lv_obj_get_style_text_font(obj, LV_PART_MAIN);
+
+    lv_txt_get_size(size_res, text, font, letter_space, line_space, max_width,
+        flag);
+}
+
 #ifdef LV_SIMULATOR
 
 lv_obj_t* lv_spinner_create(lv_obj_t* parent, uint32_t t, uint32_t angle) {

@@ -9,24 +9,26 @@
 #define SELF(e) ((ThermostatUI*)lv_event_get_user_data((e)))
 
 constexpr auto ARC_X_OFFSET = 50;
-constexpr auto ARC_Y_OFFSET = 50;
-constexpr auto ARC_WIDTH = 7.5;
-constexpr auto ARC_RADIUS = 44;
+constexpr auto ARC_Y_OFFSET = 58;
+constexpr auto ARC_WIDTH = 9;
+constexpr auto ARC_RADIUS = 55;
 constexpr auto ARC_LOCAL_TEMPERATURE_CIRCLE_SIZE = 2.5;
 constexpr auto ARC_SETPOINT_CIRCLE_SIZE = 5;
 
-constexpr auto BUTTON_X_RELATIVE_OFFSET = 7;
-constexpr auto BUTTON_Y_OFFSET = 87;
+constexpr auto BUTTON_RADIUS = 6;
+constexpr auto BUTTON_X_OFFSET = 92;
+constexpr auto BUTTON_Y_RELATIVE_OFFSET = BUTTON_RADIUS * 2 + 2;
 
-constexpr auto STATUS_Y_OFFSET = 34;
-constexpr auto SETPOINT_Y_OFFSET = 52;
-constexpr auto LOCAL_TEMPERATURE_Y_OFFSET = 66;
+constexpr auto STATUS_Y_OFFSET = 33;
+constexpr auto STATUS_WIDTH = 40;
+constexpr auto STATUS_HEIGHT = 8;
+constexpr auto SETPOINT_Y_OFFSET = 54;
+constexpr auto LOCAL_TEMPERATURE_Y_OFFSET = 74;
+constexpr auto LOCAL_TEMPERATURE_WIDTH = 40;
+constexpr auto LOCAL_TEMPERATURE_HEIGHT = 8;
 
 ThermostatUI::ThermostatUI(lv_obj_t* parent)
     : LvglUI(parent),
-      _temperatureButtonStyle(),
-      _normalLabelStyle(),
-      _largeLabelStyle(),
       _stateLabel(nullptr),
       _setpointLabel(nullptr),
       _setpointFractionLabel(nullptr),
@@ -45,39 +47,40 @@ void ThermostatUI::setState(const ThermostatState& state) {
 void ThermostatUI::doBegin() { render(); }
 
 void ThermostatUI::doRender(lv_obj_t* parent) {
-    const auto fontNormal = &lv_font_roboto_30;
-    const auto fontLarge = &lv_font_roboto_85;
+    lv_obj_clear_flag(parent, LV_OBJ_FLAG_SCROLLABLE);
 
     lv_style_init(&_temperatureButtonStyle);
     lv_style_set_bg_color(&_temperatureButtonStyle, lv_color_black());
     lv_style_set_border_color(&_temperatureButtonStyle, lv_theme_get_color_primary(parent));
     lv_style_set_border_width(&_temperatureButtonStyle, 2);
+    lv_style_set_text_font(&_temperatureButtonStyle, NORMAL_FONT);
 
     lv_style_init(&_normalLabelStyle);
-    lv_style_set_text_font(&_normalLabelStyle, fontNormal);
+    lv_style_set_text_font(&_normalLabelStyle, NORMAL_FONT);
     lv_style_set_text_align(&_normalLabelStyle, LV_TEXT_ALIGN_CENTER);
 
-    lv_style_init(&_largeLabelStyle);
-    lv_style_set_text_font(&_largeLabelStyle, fontLarge);
-    lv_style_set_text_align(&_largeLabelStyle, LV_TEXT_ALIGN_CENTER);
+    lv_style_init(&_largeDigitsLabelStyle);
+    lv_style_set_text_font(&_largeDigitsLabelStyle, LARGE_DIGITS_FONT);
+    lv_style_set_text_align(&_largeDigitsLabelStyle, LV_TEXT_ALIGN_CENTER);
 
-    _stateLabel =
-        createLabel(parent, _normalLabelStyle, pw(50), ph(STATUS_Y_OFFSET), pw(40), ph(5), LV_TEXT_ALIGN_CENTER);
+    _stateLabel = createLabel(parent, _normalLabelStyle, pw(50), ph(STATUS_Y_OFFSET), pw(STATUS_WIDTH),
+                              ph(STATUS_HEIGHT), LV_TEXT_ALIGN_CENTER);
 
     createSetpointLabels(parent);
 
-    _localTemperatureLabel = createLabel(parent, _normalLabelStyle, pw(50), ph(LOCAL_TEMPERATURE_Y_OFFSET), pw(40),
-                                         ph(5), LV_TEXT_ALIGN_CENTER);
+    _localTemperatureLabel =
+        createLabel(parent, _normalLabelStyle, pw(50), ph(LOCAL_TEMPERATURE_Y_OFFSET), pw(LOCAL_TEMPERATURE_WIDTH),
+                    ph(LOCAL_TEMPERATURE_HEIGHT), LV_TEXT_ALIGN_CENTER);
 
     createArcControl(parent);
 
-    const auto downButton =
-        createTemperatureButton(parent, LV_SYMBOL_MINUS, pw(50 - BUTTON_X_RELATIVE_OFFSET), ph(BUTTON_Y_OFFSET), pw(4));
+    const auto downButton = createTemperatureButton(parent, LV_SYMBOL_MINUS, pw(BUTTON_X_OFFSET),
+                                                    ph(50 + BUTTON_Y_RELATIVE_OFFSET), pw(BUTTON_RADIUS));
     lv_obj_add_event_cb(
         downButton, [](auto e) { SELF(e)->handleSetpointChange(-0.5); }, LV_EVENT_CLICKED, this);
 
-    const auto upButton =
-        createTemperatureButton(parent, LV_SYMBOL_PLUS, pw(50 + BUTTON_X_RELATIVE_OFFSET), ph(BUTTON_Y_OFFSET), pw(4));
+    const auto upButton = createTemperatureButton(parent, LV_SYMBOL_PLUS, pw(BUTTON_X_OFFSET),
+                                                  ph(50 - BUTTON_Y_RELATIVE_OFFSET), pw(BUTTON_RADIUS));
     lv_obj_add_event_cb(
         upButton, [](auto e) { SELF(e)->handleSetpointChange(0.5); }, LV_EVENT_CLICKED, this);
 
@@ -93,7 +96,6 @@ lv_obj_t* ThermostatUI::createTemperatureButton(lv_obj_t* parent, const char* im
     lv_obj_set_y(button, y - radius);
     lv_obj_set_style_radius(button, LV_RADIUS_CIRCLE, 0);
     lv_obj_set_style_bg_img_src(button, image, 0);
-    lv_obj_set_style_text_font(button, lv_theme_get_font_large(button), 0);
 
     return button;
 }
@@ -110,31 +112,14 @@ lv_obj_t* ThermostatUI::createLabel(lv_obj_t* parent, lv_style_t& style, int x, 
 }
 
 void ThermostatUI::createSetpointLabels(lv_obj_t* parent) {
-    static lv_coord_t columnDesc[] = {pw(20), pw(20), LV_GRID_TEMPLATE_LAST};
-    static lv_coord_t rowDesc[] = {ph(8), ph(8), LV_GRID_TEMPLATE_LAST};
+    _setpointLabel = lv_label_create(parent);
+    lv_obj_add_style(_setpointLabel, &_largeDigitsLabelStyle, 0);
 
-    auto setpointContainer = lv_obj_create(parent);
-    lv_obj_remove_style_all(setpointContainer);
-    lv_obj_set_grid_dsc_array(setpointContainer, columnDesc, rowDesc);
-    lv_obj_set_style_pad_row(setpointContainer, 0, 0);
-    lv_obj_set_style_pad_column(setpointContainer, 0, 0);
-    lv_obj_set_bounds(setpointContainer, pw(50), ph(SETPOINT_Y_OFFSET), pw(35), ph(19), LV_TEXT_ALIGN_CENTER);
+    _setpointUnitLabel = lv_label_create(parent);
+    lv_obj_add_style(_setpointUnitLabel, &_normalLabelStyle, 0);
+    lv_label_set_text(_setpointUnitLabel, "°C");
 
-    _setpointLabel = lv_label_create(setpointContainer);
-    lv_obj_set_size(_setpointLabel, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-    lv_obj_set_grid_cell(_setpointLabel, LV_GRID_ALIGN_END, 0, 1, LV_GRID_ALIGN_CENTER, 0, 2);
-    lv_obj_add_style(_setpointLabel, &_largeLabelStyle, 0);
-    lv_obj_set_style_pad_top(_setpointLabel, ph(2), LV_PART_MAIN);
-
-    auto setpointUnitLabel = lv_label_create(setpointContainer);
-    lv_obj_set_size(setpointUnitLabel, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-    lv_obj_set_grid_cell(setpointUnitLabel, LV_GRID_ALIGN_START, 1, 1, LV_GRID_ALIGN_END, 0, 1);
-    lv_obj_add_style(setpointUnitLabel, &_normalLabelStyle, 0);
-    lv_label_set_text(setpointUnitLabel, "°C");
-
-    _setpointFractionLabel = lv_label_create(setpointContainer);
-    lv_obj_set_size(_setpointFractionLabel, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-    lv_obj_set_grid_cell(_setpointFractionLabel, LV_GRID_ALIGN_START, 1, 1, LV_GRID_ALIGN_START, 1, 1);
+    _setpointFractionLabel = lv_label_create(parent);
     lv_obj_add_style(_setpointFractionLabel, &_normalLabelStyle, 0);
 }
 
@@ -243,6 +228,30 @@ void ThermostatUI::renderState() {
         const auto setpointFractionLabel = format(",%d", int(roundedSetpoint * 10) % 10);
         lv_label_set_text(_setpointFractionLabel, setpointFractionLabel.c_str());
     }
+
+    // Reposition the labels.
+    lv_point_t setpointLabelSize;
+    lv_label_get_text_size(&setpointLabelSize, _setpointLabel, 0, 0, LV_COORD_MAX,
+                    LV_TEXT_FLAG_EXPAND);
+    lv_point_t setpointUnitLabelSize;
+    lv_label_get_text_size(&setpointUnitLabelSize, _setpointUnitLabel, 0, 0, LV_COORD_MAX,
+        LV_TEXT_FLAG_EXPAND);
+    lv_point_t setpointFractionLabelSize;
+    lv_label_get_text_size(&setpointFractionLabelSize, _setpointFractionLabel, 0, 0, LV_COORD_MAX,
+        LV_TEXT_FLAG_EXPAND);
+
+    const auto setpointFullWidth = setpointLabelSize.x + max(setpointUnitLabelSize.x, setpointFractionLabelSize.x);
+    const auto setpointXOffset = pw(50) - setpointFullWidth / 2;
+
+    const auto setpointYOffset = ph(SETPOINT_Y_OFFSET) - setpointLabelSize.y / 2;
+
+    const auto setpointUnitLabelNudge = -6;
+    const auto setpointFractionLabelNudge = 9;
+
+    lv_obj_set_pos(_setpointLabel, setpointXOffset, setpointYOffset);
+    lv_obj_set_pos(_setpointUnitLabel, setpointXOffset + setpointLabelSize.x, setpointYOffset + setpointUnitLabelNudge);
+    lv_obj_set_pos(_setpointFractionLabel, setpointXOffset + setpointLabelSize.x,
+                   setpointYOffset + setpointLabelSize.y - setpointFractionLabelSize.y + setpointFractionLabelNudge);
 
     if (isnan(_state.localTemperature)) {
         lv_label_set_text(_localTemperatureLabel, "NA");

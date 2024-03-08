@@ -35,7 +35,7 @@ void LvglUI::render() {
     lv_obj_clean(_parent);
 
     lv_theme_default_init(nullptr, lv_palette_main(LV_PALETTE_GREY), lv_palette_main(LV_PALETTE_GREY),
-                          LV_THEME_DEFAULT_DARK, &lv_font_montserrat_24);
+                          LV_THEME_DEFAULT_DARK, LV_FONT_DEFAULT);
 
     lv_obj_set_style_bg_color(_parent, lv_color_black(), LV_PART_MAIN);
 
