@@ -336,6 +336,8 @@ void ESP_Panel::displayOn() {
     if (_displayState == DisplayState::Off) {
         _displayState = DisplayState::PendingOn;
     }
+
+    resetDisplayOffTimer();
 }
 
 void ESP_Panel::resetDisplayOffTimer() {
