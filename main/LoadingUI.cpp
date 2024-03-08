@@ -41,7 +41,7 @@ void LoadingUI::renderError(lv_obj_t* parent) {
     lv_label_set_text(error, _error);
     lv_obj_set_style_text_font(error, &lv_font_roboto_30, LV_PART_MAIN);
     lv_obj_set_style_text_align(error, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-    lv_obj_set_bounds(error, pw(50), ph(30), pw(90), ph(10), LV_TEXT_ALIGN_CENTER);
+    lv_obj_set_bounds(error, pw(50), ph(30), pw(90), ph(15), LV_TEXT_ALIGN_CENTER);
 
     auto button = lv_btn_create(parent);
     lv_obj_set_style_text_font(button, &lv_font_roboto_30, LV_PART_MAIN);

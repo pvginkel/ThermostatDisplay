@@ -18,7 +18,7 @@ class Application {
     LoadingUI* _loadingUI;
     ThermostatUI* _thermostatUI;
     Queue _queue;
-    DeviceConfiguration* _configuration;
+    DeviceConfiguration _configuration;
     MotionSensor _motionSensor;
 
 public:

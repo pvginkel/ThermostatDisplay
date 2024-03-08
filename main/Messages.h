@@ -8,4 +8,5 @@ public:
     static const char* connectingToWifi;
     static const char* connectingToHomeAssistant;
     static const char* failedToConnect;
+    static const char* failedToRetrieveConfiguration;
 };

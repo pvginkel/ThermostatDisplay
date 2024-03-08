@@ -14,7 +14,6 @@ Application::Application(ESP_Panel &panel)
       _mqttConnection(nullptr),
       _loadingUI(nullptr),
       _thermostatUI(nullptr),
-      _configuration(nullptr),
       _motionSensor(&_queue) {}
 
 void Application::begin(lv_disp_t *disp) {
@@ -73,15 +72,12 @@ void Application::beginWifi() {
             }
 
             if (state.connected) {
-                self->_loadingUI->setTitle(Messages::connectingToHomeAssistant);
-
                 self->beginWifiAvailable();
             } else {
                 self->_loadingUI->setError(Messages::failedToConnect);
                 self->_loadingUI->setState(LoadingUIState::Error);
+                self->_loadingUI->redraw();
             }
-
-            self->_loadingUI->redraw();
         },
         (uintptr_t)this);
 
@@ -91,7 +87,17 @@ void Application::beginWifi() {
 void Application::beginWifiAvailable() {
     ESP_LOGI(TAG, "WiFi available, starting other services");
 
-    _configuration = new DeviceConfiguration();
+    auto err = _configuration.load();
+
+    if (err != ESP_OK) {
+        auto error = format(Messages::failedToRetrieveConfiguration, _configuration.getEndpoint().c_str());
+
+        _loadingUI->setError(strdup(error.c_str()));
+        _loadingUI->setState(LoadingUIState::Error);
+        _loadingUI->redraw();
+
+        return;
+    }
 
     _otaManager.begin();
 
@@ -99,9 +105,12 @@ void Application::beginWifiAvailable() {
 }
 
 void Application::beginMQTT() {
+    _loadingUI->setTitle(Messages::connectingToHomeAssistant);
+    _loadingUI->redraw();
+
     ESP_LOGI(TAG, "Connecting to MQTT / Home Assistant");
 
-    _mqttConnection = new MQTTConnection(&_queue, *_configuration);
+    _mqttConnection = new MQTTConnection(&_queue, _configuration);
 
     _mqttConnection->onStateChanged(
         [](auto state, uintptr_t data) {
