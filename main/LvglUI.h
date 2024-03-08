@@ -1,9 +1,7 @@
 ﻿#pragma once
 
 extern "C" {
-// The temperature icon comes from Fontawesome. Include the "solid" TTF when
-// generating fonts from https://lvgl.io/tools/fontconverter and include
-// 0xf2c9 in the range.
+// Use the script in the tools folder to update the fonts.
 
 // LV_FONT_DECLARE(lv_font_roboto_20);
 LV_FONT_DECLARE(lv_font_roboto_30);

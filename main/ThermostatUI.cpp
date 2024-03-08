@@ -266,14 +266,14 @@ void ThermostatUI::renderState() {
                 (TEMPERATURE_MAX - TEMPERATURE_MIN) * 270);
     }
 
-    lv_arc_set_bg_angles(_setpointArc, 0, lv_value_precise_t(setpointOffset));
+    lv_arc_set_bg_angles(_setpointArc, 0, setpointOffset);
 
     if (setpointOffset <= localTemperatureOffset) {
         lv_obj_add_flag(_setpointHeatingArc, LV_OBJ_FLAG_HIDDEN);
     } else {
         lv_obj_clear_flag(_setpointHeatingArc, LV_OBJ_FLAG_HIDDEN);
 
-        lv_arc_set_bg_angles(_setpointHeatingArc, lv_value_precise_t(localTemperatureOffset), lv_value_precise_t(setpointOffset));
+        lv_arc_set_bg_angles(_setpointHeatingArc, localTemperatureOffset, setpointOffset);
     }
 
     positionCircleOnArc(_localTemperatureCircle, ph(ARC_LOCAL_TEMPERATURE_CIRCLE_SIZE), int(localTemperatureOffset));
