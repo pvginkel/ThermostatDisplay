@@ -185,8 +185,8 @@ void ThermostatUI::positionCircleOnArc(lv_obj_t* obj, int size, int angleDegrees
     auto x = centerX + radius * cos(angleRadians) - size / 2;
     auto y = centerY + radius * sin(angleRadians) - size / 2;
 
-    lv_obj_set_x(obj, x);
-    lv_obj_set_y(obj, y);
+    lv_obj_set_x(obj, int32_t(x));
+    lv_obj_set_y(obj, int32_t(y));
 }
 
 lv_obj_t* ThermostatUI::createArcObject(lv_obj_t* parent, lv_color_t color) {
@@ -266,17 +266,17 @@ void ThermostatUI::renderState() {
                 (TEMPERATURE_MAX - TEMPERATURE_MIN) * 270);
     }
 
-    lv_arc_set_bg_angles(_setpointArc, 0, setpointOffset);
+    lv_arc_set_bg_angles(_setpointArc, 0, lv_value_precise_t(setpointOffset));
 
     if (setpointOffset <= localTemperatureOffset) {
         lv_obj_add_flag(_setpointHeatingArc, LV_OBJ_FLAG_HIDDEN);
     } else {
         lv_obj_clear_flag(_setpointHeatingArc, LV_OBJ_FLAG_HIDDEN);
 
-        lv_arc_set_bg_angles(_setpointHeatingArc, localTemperatureOffset, setpointOffset);
+        lv_arc_set_bg_angles(_setpointHeatingArc, lv_value_precise_t(localTemperatureOffset), lv_value_precise_t(setpointOffset));
     }
 
-    positionCircleOnArc(_localTemperatureCircle, ph(ARC_LOCAL_TEMPERATURE_CIRCLE_SIZE), localTemperatureOffset);
+    positionCircleOnArc(_localTemperatureCircle, ph(ARC_LOCAL_TEMPERATURE_CIRCLE_SIZE), int(localTemperatureOffset));
 
     auto localTemperatureCircleColor =
         setpointOffset < localTemperatureOffset ? lv_color_make(132, 132, 132) : lv_color_make(134, 65, 34);
@@ -284,7 +284,7 @@ void ThermostatUI::renderState() {
     lv_obj_set_style_bg_color(_localTemperatureCircle, localTemperatureCircleColor, LV_PART_MAIN);
     lv_obj_set_style_border_color(_localTemperatureCircle, localTemperatureCircleColor, LV_PART_MAIN);
 
-    positionCircleOnArc(_setpointCircle, ph(ARC_SETPOINT_CIRCLE_SIZE), setpointOffset);
+    positionCircleOnArc(_setpointCircle, ph(ARC_SETPOINT_CIRCLE_SIZE), int(setpointOffset));
 }
 
 void ThermostatUI::handleArcPressed(lv_event_t* e) {

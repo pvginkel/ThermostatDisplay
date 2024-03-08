@@ -50,6 +50,16 @@ int hextoi(char c) {
     return -1;
 }
 
+#ifdef LV_SIMULATOR
+
+lv_obj_t* lv_spinner_create(lv_obj_t* parent, uint32_t t, uint32_t angle) {
+    auto obj = lv_spinner_create(parent);
+    lv_spinner_set_anim_params(obj, t, angle);
+    return obj;
+}
+
+#else
+
 esp_err_t esp_http_download_string(const esp_http_client_config_t& config, string& target, size_t maxLength) {
     target.clear();
 
@@ -98,3 +108,5 @@ end:
 
     return err;
 }
+
+#endif

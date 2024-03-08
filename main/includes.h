@@ -50,19 +50,11 @@ using namespace std;
 #include "nvs_flash.h"
 #include "sdkconfig.h"
 
+#else
+
+typedef void* QueueHandle_t;
+
 #endif
 
 #include "Callback.h"
 #include "support.h"
-
-#ifdef LV_SIMULATOR
-
-#define lv_obj_set_style_bg_img_src lv_obj_set_style_bg_image_src
-
-static lv_obj_t* lv_spinner_create(lv_obj_t* parent, uint32_t t, uint32_t angle) {
-    auto obj = lv_spinner_create(parent);
-    lv_spinner_set_anim_params(obj, t, angle);
-    return obj;
-}
-
-#endif

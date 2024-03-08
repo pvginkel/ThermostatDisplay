@@ -40,4 +40,15 @@ string format(const char* fmt, ...);
 
 bool iequals(const string& a, const string& b);
 int hextoi(char c);
+
+#ifdef LV_SIMULATOR
+
+#define lv_obj_set_style_bg_img_src lv_obj_set_style_bg_image_src
+
+lv_obj_t* lv_spinner_create(lv_obj_t * parent, uint32_t t, uint32_t angle);
+
+#else
+
 esp_err_t esp_http_download_string(const esp_http_client_config_t& config, string& target, size_t maxLength = 0);
+
+#endif
