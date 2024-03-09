@@ -270,7 +270,10 @@ lv_disp_t *ESP_Panel::begin() {
 
     ESP_LOGI(TAG, "Install LVGL tick timer");
     // Tick interface for LVGL (using esp_timer to generate 2ms periodic event)
-    const esp_timer_create_args_t lvgl_tick_timer_args = {.callback = &increase_lvgl_tick, .name = "lvgl_tick"};
+    const esp_timer_create_args_t lvgl_tick_timer_args = {
+        .callback = &increase_lvgl_tick,
+        .name = "lvgl_tick",
+    };
 
     static lv_indev_drv_t indev_drv;  // Input device driver (Touch)
     lv_indev_drv_init(&indev_drv);
