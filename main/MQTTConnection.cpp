@@ -21,7 +21,8 @@ MQTTConnection::MQTTConnection(Queue *synchronizationQueue, const DeviceConfigur
       _setpointTopic(format("%s/%s/set/setpoint", TOPIC_PREFIX, configuration.getDeviceName().c_str())),
       _heatingTopic(format("%s/%s/set/heating", TOPIC_PREFIX, configuration.getDeviceName().c_str())),
       _entityTopic(format("%s/%s", TOPIC_PREFIX, configuration.getDeviceName().c_str())),
-      _stateTopic(format("%s/%s/state", TOPIC_PREFIX, configuration.getDeviceName().c_str())) {}
+      _stateTopic(format("%s/%s/state", TOPIC_PREFIX, configuration.getDeviceName().c_str())),
+      _logTopic(format("%s/%s/log", TOPIC_PREFIX, configuration.getDeviceName().c_str())) {}
 
 void MQTTConnection::begin() {
     esp_mqtt5_connection_property_config_t connect_property = {
@@ -329,6 +330,25 @@ void MQTTConnection::setState(ThermostatState &state, bool force) {
     auto result = esp_mqtt_client_publish(_client, _entityTopic.c_str(), json, 0, QOS_MIN_ONE, true);
     if (result < 0) {
         ESP_LOGE(TAG, "Sending status update message failed with error %d", result);
+    }
+
+    cJSON_free(json);
+}
+
+void MQTTConnection::logMessage(const string &message) { logMessage(message.c_str()); }
+
+void MQTTConnection::logMessage(const char *const message) {
+    auto root = cJSON_CreateObject();
+
+    cJSON_AddStringToObject(root, "message", message);
+    cJSON_AddStringToObject(root, "entity_id", _configuration.getDeviceEntityId().c_str());
+
+    auto json = cJSON_Print(root);
+    cJSON_Delete(root);
+
+    auto result = esp_mqtt_client_publish(_client, _logTopic.c_str(), json, 0, QOS_MAX_ONE, false);
+    if (result < 0) {
+        ESP_LOGE(TAG, "Sending log message failed with error %d", result);
     }
 
     cJSON_free(json);

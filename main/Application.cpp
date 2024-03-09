@@ -126,6 +126,10 @@ void Application::beginMQTT() {
                 delete self->_loadingUI;
                 self->_loadingUI = nullptr;
 
+                // Log the reset reason.
+                auto resetReason = esp_reset_reason();
+                self->_mqttConnection->logMessage(format("esp_reset_reason: %d", (int)resetReason));
+
                 self->beginUI();
             } else {
                 self->_loadingUI->setError(Messages::failedToConnect);

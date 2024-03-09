@@ -23,6 +23,7 @@ class MQTTConnection {
     string _heatingTopic;
     string _entityTopic;
     string _stateTopic;
+    string _logTopic;
     ThermostatState _state;
     CallbackArg<MQTTConnectionState> _stateChanged;
     Callback _thermostatStateChanged;
@@ -37,6 +38,8 @@ public:
     void onThermostatStateChanged(Callback::Func func, uintptr_t data = 0) { _thermostatStateChanged.set(func, data); }
     ThermostatState getState() { return _state; }
     void setState(ThermostatState &state, bool force = false);
+    void logMessage(const string &message);
+    void logMessage(const char *const message);
 
 private:
     void initializeState();
