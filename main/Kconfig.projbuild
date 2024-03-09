@@ -37,6 +37,21 @@ menu "OTA Configuration"
 
 endmenu
 
+menu "Logging Configuration"
+
+    config LOG_ENDPOINT
+        string "Logging endpoint"
+
+    config LOG_INTERVAL
+        int "Interval to upload log messages in ms"
+        default 5000
+
+    config LOG_RECV_TIMEOUT
+        int "Logging receive timeout in ms"
+        default 15000
+
+endmenu
+
 menu "Display Configuration"
     config DISPLAY_DOUBLE_FB
         bool "Use double Frame Buffer"

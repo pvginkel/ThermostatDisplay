@@ -17,6 +17,10 @@ Application::Application(ESP_Panel &panel)
       _motionSensor(&_queue) {}
 
 void Application::begin(lv_disp_t *disp) {
+    ESP_LOGI(TAG, "Setting up the log manager");
+
+    _logManager.begin();
+
     ESP_LOGI(TAG, "Setting up motion sensor");
 
     _motionSensor.onTriggered(
@@ -99,6 +103,8 @@ void Application::beginWifiAvailable() {
         return;
     }
 
+    _logManager.setConfiguration(_configuration);
+
     if (_configuration.getEnableOTA()) {
         _otaManager.begin();
     }
@@ -128,7 +134,7 @@ void Application::beginMQTT() {
 
                 // Log the reset reason.
                 auto resetReason = esp_reset_reason();
-                self->_mqttConnection->logMessage(format("esp_reset_reason: %d", (int)resetReason));
+                ESP_LOGI(TAG, "esp_reset_reason: %d", resetReason);
 
                 self->beginUI();
             } else {

@@ -51,13 +51,11 @@ int hextoi(char c) {
 }
 
 void lv_label_get_text_size(lv_point_t* size_res, const lv_obj_t* obj, lv_coord_t letter_space, lv_coord_t line_space,
-    lv_coord_t max_width, lv_text_flag_t flag)
-{
+                            lv_coord_t max_width, lv_text_flag_t flag) {
     const auto text = lv_label_get_text(obj);
     const auto font = lv_obj_get_style_text_font(obj, LV_PART_MAIN);
 
-    lv_txt_get_size(size_res, text, font, letter_space, line_space, max_width,
-        flag);
+    lv_txt_get_size(size_res, text, font, letter_space, line_space, max_width, flag);
 }
 
 #ifdef LV_SIMULATOR
@@ -115,6 +113,22 @@ end:
     esp_http_client_cleanup(client);
 
     delete[] buffer;
+
+    return err;
+}
+
+esp_err_t esp_http_upload_string(const esp_http_client_config_t& config, const char* const data) {
+    auto err = ESP_OK;
+
+    auto client = esp_http_client_init(&config);
+
+    esp_http_client_set_method(client, HTTP_METHOD_POST);
+    esp_http_client_set_post_field(client, data, strlen(data));
+
+    err = esp_http_client_perform(client);
+
+    esp_http_client_close(client);
+    esp_http_client_cleanup(client);
 
     return err;
 }

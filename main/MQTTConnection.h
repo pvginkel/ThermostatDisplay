@@ -38,8 +38,6 @@ public:
     void onThermostatStateChanged(Callback::Func func, uintptr_t data = 0) { _thermostatStateChanged.set(func, data); }
     ThermostatState getState() { return _state; }
     void setState(ThermostatState &state, bool force = false);
-    void logMessage(const string &message);
-    void logMessage(const char *const message);
 
 private:
     void initializeState();

@@ -284,7 +284,7 @@ void MQTTConnection::publishDiscovery() {
     cJSON_AddStringToObject(root, "temperature_unit", "C");
     cJSON_AddStringToObject(root, "unique_id", uniqueIdentifier.c_str());
 
-    auto json = cJSON_Print(root);
+    auto json = cJSON_PrintUnformatted(root);
     cJSON_Delete(root);
 
     auto publishTopic = format("homeassistant/climate/%s/climate/config", _deviceId.c_str());
@@ -324,31 +324,12 @@ void MQTTConnection::setState(ThermostatState &state, bool force) {
     cJSON_AddStringToObject(root, "mode", serializeMode(state.mode));
     cJSON_AddStringToObject(root, "state", state.state == ThermostatRunningState::True ? "heating" : "idle");
 
-    auto json = cJSON_Print(root);
+    auto json = cJSON_PrintUnformatted(root);
     cJSON_Delete(root);
 
     auto result = esp_mqtt_client_publish(_client, _entityTopic.c_str(), json, 0, QOS_MIN_ONE, true);
     if (result < 0) {
         ESP_LOGE(TAG, "Sending status update message failed with error %d", result);
-    }
-
-    cJSON_free(json);
-}
-
-void MQTTConnection::logMessage(const string &message) { logMessage(message.c_str()); }
-
-void MQTTConnection::logMessage(const char *const message) {
-    auto root = cJSON_CreateObject();
-
-    cJSON_AddStringToObject(root, "message", message);
-    cJSON_AddStringToObject(root, "entity_id", _configuration.getDeviceEntityId().c_str());
-
-    auto json = cJSON_Print(root);
-    cJSON_Delete(root);
-
-    auto result = esp_mqtt_client_publish(_client, _logTopic.c_str(), json, 0, QOS_MAX_ONE, false);
-    if (result < 0) {
-        ESP_LOGE(TAG, "Sending log message failed with error %d", result);
     }
 
     cJSON_free(json);

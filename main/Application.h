@@ -2,6 +2,7 @@
 
 #include "ESP_Panel.h"
 #include "LoadingUI.h"
+#include "LogManager.h"
 #include "MQTTConnection.h"
 #include "MotionSensor.h"
 #include "OTAManager.h"
@@ -20,6 +21,7 @@ class Application {
     Queue _queue;
     DeviceConfiguration _configuration;
     MotionSensor _motionSensor;
+    LogManager _logManager;
 
 public:
     Application(ESP_Panel& panel);
