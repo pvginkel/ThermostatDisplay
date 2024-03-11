@@ -4,7 +4,8 @@
 
 static const char *TAG = "WifiConnection";
 
-WifiConnection::WifiConnection(Queue *synchronizationQueue) : _synchronizationQueue(synchronizationQueue) {}
+WifiConnection::WifiConnection(Queue *synchronizationQueue)
+    : _synchronizationQueue(synchronizationQueue), _attempt(0) {}
 
 void WifiConnection::begin() {
     _wifiEventGroup = xEventGroupCreate();
@@ -65,7 +66,7 @@ void WifiConnection::begin() {
 
 void WifiConnection::eventHandler(esp_event_base_t eventBase, int32_t eventId, void *eventData) {
     if (eventBase == WIFI_EVENT && eventId == WIFI_EVENT_STA_START) {
-        ESP_LOGI(TAG, "Connecting to AP");
+        ESP_LOGI(TAG, "Connecting to AP, attempt %d", _attempt + 1);
         esp_wifi_connect();
     } else if (eventBase == WIFI_EVENT && eventId == WIFI_EVENT_STA_DISCONNECTED) {
         auto event = (wifi_event_sta_disconnected_t *)eventData;
@@ -73,9 +74,14 @@ void WifiConnection::eventHandler(esp_event_base_t eventBase, int32_t eventId, v
         // Reasons are defined here:
         // https://github.com/espressif/esp-idf/blob/4b5b064caf951a48b48a39293d625b5de2132719/components/esp_wifi/include/esp_wifi_types_generic.h#L79.
 
-        ESP_LOGI(TAG, "Disconnected from AP, reason %d", event->reason);
+        ESP_LOGW(TAG, "Disconnected from AP, reason %d", event->reason);
 
-        _stateChanged.queue(_synchronizationQueue, {.connected = false, .errorReason = event->reason});
+        if (_attempt++ < CONFIG_DEVICE_NETWORK_CONNECT_ATTEMPTS) {
+            ESP_LOGI(TAG, "Retrying...");
+            esp_wifi_connect();
+        } else {
+            _stateChanged.queue(_synchronizationQueue, {.connected = false, .errorReason = event->reason});
+        }
     } else if (eventBase == IP_EVENT && eventId == IP_EVENT_STA_GOT_IP) {
         auto event = (ip_event_got_ip_t *)eventData;
 

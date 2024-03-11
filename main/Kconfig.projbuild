@@ -20,6 +20,10 @@ menu "Device Configuration"
     config DEVICE_CONFIG_ENDPOINT
         string "Device config endpoint (%s becomes MAC address)"
 
+    config DEVICE_NETWORK_CONNECT_ATTEMPTS
+        int "Network connection attempts"
+        default 1
+
 endmenu
 
 menu "OTA Configuration"
