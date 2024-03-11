@@ -9,14 +9,14 @@
 #define SELF(e) ((ThermostatUI*)lv_event_get_user_data((e)))
 
 constexpr auto ARC_X_OFFSET = 50;
-constexpr auto ARC_Y_OFFSET = 58;
+constexpr auto ARC_Y_OFFSET = 57;
 constexpr auto ARC_WIDTH = 9;
-constexpr auto ARC_RADIUS = 55;
+constexpr auto ARC_RADIUS = 52;
 constexpr auto ARC_LOCAL_TEMPERATURE_CIRCLE_SIZE = 2.5;
 constexpr auto ARC_SETPOINT_CIRCLE_SIZE = 5;
 
 constexpr auto BUTTON_RADIUS = 6;
-constexpr auto BUTTON_X_OFFSET = 92;
+constexpr auto BUTTON_X_OFFSET = 90;
 constexpr auto BUTTON_Y_RELATIVE_OFFSET = BUTTON_RADIUS * 2 + 2;
 
 constexpr auto STATUS_Y_OFFSET = 33;
