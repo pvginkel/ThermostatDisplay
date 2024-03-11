@@ -6,6 +6,8 @@
 #include "ESP_Panel_Conf.h"
 #include "I2CConf.h"
 
+constexpr auto BACKLIGHT_CHANGE_DEBOUNCE = 1000;
+
 // The sample uses 160 (1/3d of 480), but we don't have that much memory available.
 #define DISPLAY_BUFFER_LINES (480 / 5)
 
@@ -22,7 +24,11 @@ ESP_Panel *ESP_Panel::_instance = nullptr;
 static const char *TAG = "ESP_Panel";
 
 ESP_Panel::ESP_Panel()
-    : _panel_handle(nullptr), _touch_handle(nullptr), _displayOffTimer(nullptr), _displayState(DisplayState::On) {
+    : _panel_handle(nullptr),
+      _touch_handle(nullptr),
+      _displayOffTimer(nullptr),
+      _displayState(DisplayState::On),
+      _lastBacklightChange(0) {
     _instance = this;
 }
 
@@ -310,8 +316,25 @@ lv_disp_t *ESP_Panel::begin() {
 }
 
 void ESP_Panel::process() {
+    handleDisplayState();
+
     // raise the task priority of LVGL and/or reduce the handler period can improve the
     // performance
+
+    vTaskDelay(pdMS_TO_TICKS(10));
+
+    // The task running lv_timer_handler should have lower priority than that running `lv_tick_inc`
+    lv_timer_handler();
+}
+
+void ESP_Panel::handleDisplayState() {
+    // Refuse to turn on the backlight within BACKLIGHT_CHANGE_DEBOUNCE milliseconds.
+    // This is to mitigate brownouts.
+
+    auto millis = esp_get_millis();
+    if (_lastBacklightChange && (millis - _lastBacklightChange) < BACKLIGHT_CHANGE_DEBOUNCE) {
+        return;
+    }
 
     switch (_displayState) {
         case DisplayState::PendingOn:
@@ -330,6 +353,7 @@ void ESP_Panel::process() {
             esp_lcd_rgb_panel_restart(_panel_handle);
 #endif
 
+            _lastBacklightChange = millis;
             set_ch422g_pins(IO_EXPANDER_TOUCH_PANEL_RESET | IO_EXPANDER_LCD_BACKLIGHT | IO_EXPANDER_LCD_RESET);
             break;
 
@@ -338,14 +362,10 @@ void ESP_Panel::process() {
 
             _displayState = DisplayState::Off;
 
+            _lastBacklightChange = millis;
             set_ch422g_pins(IO_EXPANDER_TOUCH_PANEL_RESET | IO_EXPANDER_LCD_RESET);
             break;
     }
-
-    vTaskDelay(pdMS_TO_TICKS(10));
-
-    // The task running lv_timer_handler should have lower priority than that running `lv_tick_inc`
-    lv_timer_handler();
 }
 
 void ESP_Panel::displayOn() {

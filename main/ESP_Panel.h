@@ -14,6 +14,7 @@ class ESP_Panel {  // we use two semaphores to sync the VSYNC event and the LVGL
     esp_lcd_touch_handle_t _touch_handle;
     esp_timer_handle_t _displayOffTimer;
     DisplayState _displayState;
+    uint32_t _lastBacklightChange;
 
 #if CONFIG_DISPLAY_AVOID_TEAR_EFFECT_WITH_SEM
     SemaphoreHandle_t sem_vsync_end;
@@ -31,5 +32,6 @@ public:
 private:
     esp_err_t i2c_master_init();
     void resetDisplayOffTimer();
+    void handleDisplayState();
     void lvgl_touch_cb(lv_indev_drv_t *drv, lv_indev_data_t *data);
 };
