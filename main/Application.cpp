@@ -52,7 +52,8 @@ void Application::begin() {
     ESP_LOGI(TAG, "Setting up loading UI");
 
     // Don't show the loading UI if we're booting up from a brownout reset.
-    const auto silent = esp_reset_reason() == ESP_RST_BROWNOUT;
+    const auto resetReason = esp_reset_reason();
+    const auto silent = resetReason == ESP_RST_BROWNOUT || resetReason == ESP_RST_WDT;
 
     _loadingUI = new LoadingUI(_parent, silent);
 
