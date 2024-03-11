@@ -26,10 +26,10 @@ public:
     lv_disp_t *begin();
     void process();
     void displayOn();
+    void displayOff();
 
 private:
     esp_err_t i2c_master_init();
     void resetDisplayOffTimer();
-    void displayOffEvent();
     void lvgl_touch_cb(lv_indev_drv_t *drv, lv_indev_data_t *data);
 };

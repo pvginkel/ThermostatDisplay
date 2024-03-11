@@ -107,6 +107,10 @@ void Application::beginWifiAvailable() {
 
     if (_configuration.getEnableOTA()) {
         _otaManager.begin();
+
+        // OTA writes a lot of data to flash. This causes screen drift because SPIRAM gets
+        // disabled. To mitigate this, we turn off the screen when OTA starts.
+        _otaManager.onOTAStart([](auto data) { ((Application *)data)->_panel.displayOff(); }, (uintptr_t)this);
     }
 
     beginMQTT();

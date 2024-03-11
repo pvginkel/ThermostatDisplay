@@ -295,7 +295,7 @@ lv_disp_t *ESP_Panel::begin() {
     ESP_ERROR_CHECK(esp_timer_start_periodic(lvgl_tick_timer, ESP_TIMER_MS(LVGL_TICK_PERIOD_MS)));
 
     const esp_timer_create_args_t displayOffTimerArgs = {
-        .callback = [](void *arg) { ((ESP_Panel *)arg)->displayOffEvent(); },
+        .callback = [](void *arg) { ((ESP_Panel *)arg)->displayOff(); },
         .arg = this,
         .name = "displayOffTimer",
     };
@@ -367,4 +367,4 @@ void ESP_Panel::resetDisplayOffTimer() {
 #endif
 }
 
-void ESP_Panel::displayOffEvent() { _displayState = DisplayState::PendingOff; }
+void ESP_Panel::displayOff() { _displayState = DisplayState::PendingOff; }
