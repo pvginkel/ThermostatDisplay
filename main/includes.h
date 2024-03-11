@@ -1,5 +1,7 @@
 #pragma once
 
+#define _USE_MATH_DEFINES
+
 #ifdef LV_SIMULATOR
 
 #pragma warning(disable : 4200)

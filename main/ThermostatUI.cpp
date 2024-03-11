@@ -1,6 +1,4 @@
-﻿#define _USE_MATH_DEFINES
-
-#include "includes.h"
+﻿#include "includes.h"
 
 #include "ThermostatUI.h"
 

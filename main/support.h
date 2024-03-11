@@ -47,6 +47,7 @@ void lv_label_get_text_size(lv_point_t* size_res, const lv_obj_t* obj, lv_coord_
 #ifdef LV_SIMULATOR
 
 #define lv_obj_set_style_bg_img_src lv_obj_set_style_bg_image_src
+#define lv_anim_set_time lv_anim_set_duration
 
 lv_obj_t* lv_spinner_create(lv_obj_t* parent, uint32_t t, uint32_t angle);
 

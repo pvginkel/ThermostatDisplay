@@ -10,9 +10,11 @@ class LoadingUI : public LvglUI {
     const char* _error;
     Callback<void> _retryClicked;
     LoadingUIState _state;
+    vector<lv_obj_t*> _loadingCircles;
 
 public:
     LoadingUI(lv_obj_t* parent) : LvglUI(parent), _title(), _error(), _state() {}
+    ~LoadingUI();
 
     void setState(LoadingUIState state) { _state = state; }
     void setTitle(const char* title) { _title = title; }
@@ -22,7 +24,11 @@ public:
 
 protected:
     void doRender(lv_obj_t* parent) override;
-    void renderTitle(lv_obj_t* parent);
+
+private:
+    void resetRender();
+    void renderTitle(lv_obj_t* parent, double offsetY);
     void renderLoading(lv_obj_t* parent);
+    static void loadingAnimationCallback(void* var, int32_t v);
     void renderError(lv_obj_t* parent);
 };
