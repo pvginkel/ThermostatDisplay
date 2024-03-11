@@ -3,6 +3,8 @@
 class ESP_Panel {  // we use two semaphores to sync the VSYNC event and the LVGL task, to avoid potential tearing effect
     enum class DisplayState { On, Off, PendingOn, PendingOnFromTouch, PendingOff, OnPendingRelease };
 
+    static ESP_Panel *_instance;
+
     static bool on_vsync_event(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *event_data,
                                void *user_data);
     static void lvgl_flush_cb(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t *color_map);

@@ -1,3 +1,5 @@
+// clang-format off
+
 /*
  * SPDX-FileCopyrightText: 2023 Espressif Systems (Shanghai) CO LTD
  *
@@ -90,6 +92,10 @@
 #endif /* ESP_PANEL_LCD_BUS_SKIP_INIT_HOST */
 #elif ESP_PANEL_LCD_BUS_TYPE == 2
 #elif ESP_PANEL_LCD_BUS_TYPE == 3
+
+// We need to lower the clock speed when double buffering. See
+// https://espressif-docs.readthedocs-hosted.com/projects/esp-faq/en/latest/software-framework/peripherals/lcd.html#why-do-i-get-drift-overall-drift-of-the-display-when-driving-an-rgb-lcd-screen
+#if CONFIG_DISPLAY_DOUBLE_FB
     #define ESP_PANEL_LCD_RGB_CLK_HZ            (14 * 1000 * 1000)
     #define ESP_PANEL_LCD_RGB_HPW               (10)
     #define ESP_PANEL_LCD_RGB_HBP               (10)
@@ -98,6 +104,19 @@
     #define ESP_PANEL_LCD_RGB_VBP               (10)
     #define ESP_PANEL_LCD_RGB_VFP               (10)
     #define ESP_PANEL_LCD_RGB_PCLK_ACTIVE_NEG   (0)
+#else
+    // One sample app sets the clock frequency to 30 MHz, but
+    // that's still too high. 21 seems fine.
+    // #define ESP_PANEL_LCD_RGB_CLK_HZ            (30 * 1000 * 1000)
+    #define ESP_PANEL_LCD_RGB_CLK_HZ            (21 * 1000 * 1000)
+    #define ESP_PANEL_LCD_RGB_HPW               (30)
+    #define ESP_PANEL_LCD_RGB_HBP               (30)
+    #define ESP_PANEL_LCD_RGB_HFP               (210)
+    #define ESP_PANEL_LCD_RGB_VPW               (4)
+    #define ESP_PANEL_LCD_RGB_VBP               (4)
+    #define ESP_PANEL_LCD_RGB_VFP               (4)
+    #define ESP_PANEL_LCD_RGB_PCLK_ACTIVE_NEG   (1)
+#endif
     #define ESP_PANEL_LCD_RGB_DATA_WIDTH        (16)
     #define ESP_PANEL_LCD_RGB_IO_HSYNC          (46)
     #define ESP_PANEL_LCD_RGB_IO_VSYNC          (3)

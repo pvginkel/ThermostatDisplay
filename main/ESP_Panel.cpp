@@ -6,7 +6,7 @@
 #include "ESP_Panel_Conf.h"
 #include "I2CConf.h"
 
-// The sample uses 160 (1/3d of 480), but we don't have that available.
+// The sample uses 160 (1/3d of 480), but we don't have that much memory available.
 #define DISPLAY_BUFFER_LINES (480 / 5)
 
 #define LVGL_TICK_PERIOD_MS 2
@@ -17,10 +17,14 @@
 #define LCD_NUM_FB 1
 #endif  // CONFIG_DISPLAY_DOUBLE_FB
 
+ESP_Panel *ESP_Panel::_instance = nullptr;
+
 static const char *TAG = "ESP_Panel";
 
 ESP_Panel::ESP_Panel()
-    : _panel_handle(nullptr), _touch_handle(nullptr), _displayOffTimer(nullptr), _displayState(DisplayState::On) {}
+    : _panel_handle(nullptr), _touch_handle(nullptr), _displayOffTimer(nullptr), _displayState(DisplayState::On) {
+    _instance = this;
+}
 
 /**
  * @brief i2c master initialization
@@ -86,8 +90,8 @@ bool ESP_Panel::on_vsync_event(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_p
                                void *user_data) {
     BaseType_t high_task_awoken = pdFALSE;
 #if CONFIG_DISPLAY_AVOID_TEAR_EFFECT_WITH_SEM
-    if (xSemaphoreTakeFromISR(sem_gui_ready, &high_task_awoken) == pdTRUE) {
-        xSemaphoreGiveFromISR(sem_vsync_end, &high_task_awoken);
+    if (xSemaphoreTakeFromISR(_instance->sem_gui_ready, &high_task_awoken) == pdTRUE) {
+        xSemaphoreGiveFromISR(_instance->sem_vsync_end, &high_task_awoken);
     }
 #endif
     return high_task_awoken == pdTRUE;
@@ -100,8 +104,8 @@ void ESP_Panel::lvgl_flush_cb(lv_disp_drv_t *drv, const lv_area_t *area, lv_colo
     int offsety1 = area->y1;
     int offsety2 = area->y2;
 #if CONFIG_DISPLAY_AVOID_TEAR_EFFECT_WITH_SEM
-    xSemaphoreGive(sem_gui_ready);
-    xSemaphoreTake(sem_vsync_end, portMAX_DELAY);
+    xSemaphoreGive(_instance->sem_gui_ready);
+    xSemaphoreTake(_instance->sem_vsync_end, portMAX_DELAY);
 #endif
     // pass the draw buffer to the driver
     esp_lcd_panel_draw_bitmap(panel_handle, offsetx1, offsety1, offsetx2 + 1, offsety2 + 1, color_map);
@@ -316,6 +320,15 @@ void ESP_Panel::process() {
 
             _displayState =
                 _displayState == DisplayState::PendingOnFromTouch ? DisplayState::OnPendingRelease : DisplayState::On;
+
+#if CONFIG_DISPLAY_DOUBLE_FB
+            // We have screen drift problems in double buffering mode. See
+            // https://espressif-docs.readthedocs-hosted.com/projects/esp-faq/en/latest/software-framework/peripherals/lcd.html#why-do-i-get-drift-overall-drift-of-the-display-when-driving-an-rgb-lcd-screen.
+            // This resets the panel every time we turn it on, preventing screen
+            // drift from becoming permanent.
+
+            esp_lcd_rgb_panel_restart(_panel_handle);
+#endif
 
             set_ch422g_pins(IO_EXPANDER_TOUCH_PANEL_RESET | IO_EXPANDER_LCD_BACKLIGHT | IO_EXPANDER_LCD_RESET);
             break;
