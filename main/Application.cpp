@@ -23,12 +23,10 @@ void Application::begin(lv_disp_t *disp) {
 
     ESP_LOGI(TAG, "Setting up motion sensor");
 
-    _motionSensor.onTriggered(
-        [](auto data) {
-            ESP_LOGI(TAG, "Turning display on because of motion");
-            ((Application *)data)->_panel.displayOn();
-        },
-        (uintptr_t)this);
+    _motionSensor.onTriggered([this] {
+        ESP_LOGI(TAG, "Turning display on because of motion");
+        _panel.displayOn();
+    });
 
     _motionSensor.begin();
 
@@ -58,7 +56,7 @@ void Application::begin() {
     _loadingUI->begin();
     _loadingUI->setTitle(Messages::connectingToWifi);
     _loadingUI->setState(LoadingUIState::Loading);
-    _loadingUI->onRetryClicked([](uintptr_t) { esp_restart(); });
+    _loadingUI->onRetryClicked([] { esp_restart(); });
     _loadingUI->redraw();
 
     beginWifi();
@@ -67,23 +65,19 @@ void Application::begin() {
 void Application::beginWifi() {
     ESP_LOGI(TAG, "Connecting to WiFi");
 
-    _wifiConnection.onStateChanged(
-        [](auto state, uintptr_t data) {
-            auto self = (Application *)data;
+    _wifiConnection.onStateChanged([this](auto state) {
+        if (!_loadingUI) {
+            esp_restart();
+        }
 
-            if (!self->_loadingUI) {
-                esp_restart();
-            }
-
-            if (state.connected) {
-                self->beginWifiAvailable();
-            } else {
-                self->_loadingUI->setError(Messages::failedToConnect);
-                self->_loadingUI->setState(LoadingUIState::Error);
-                self->_loadingUI->redraw();
-            }
-        },
-        (uintptr_t)this);
+        if (state.connected) {
+            beginWifiAvailable();
+        } else {
+            _loadingUI->setError(Messages::failedToConnect);
+            _loadingUI->setState(LoadingUIState::Error);
+            _loadingUI->redraw();
+        }
+    });
 
     _wifiConnection.begin();
 }
@@ -110,7 +104,7 @@ void Application::beginWifiAvailable() {
 
         // OTA writes a lot of data to flash. This causes screen drift because SPIRAM gets
         // disabled. To mitigate this, we turn off the screen when OTA starts.
-        _otaManager.onOTAStart([](auto data) { ((Application *)data)->_panel.displayOff(); }, (uintptr_t)this);
+        _otaManager.onOTAStart([this] { _panel.displayOff(); });
     }
 
     beginMQTT();
@@ -124,30 +118,26 @@ void Application::beginMQTT() {
 
     _mqttConnection = new MQTTConnection(&_queue, _configuration);
 
-    _mqttConnection->onStateChanged(
-        [](auto state, uintptr_t data) {
-            auto self = (Application *)data;
+    _mqttConnection->onStateChanged([this](auto state) {
+        if (!_loadingUI) {
+            esp_restart();
+        }
 
-            if (!self->_loadingUI) {
-                esp_restart();
-            }
+        if (state.connected) {
+            delete _loadingUI;
+            _loadingUI = nullptr;
 
-            if (state.connected) {
-                delete self->_loadingUI;
-                self->_loadingUI = nullptr;
+            // Log the reset reason.
+            auto resetReason = esp_reset_reason();
+            ESP_LOGI(TAG, "esp_reset_reason: %d", resetReason);
 
-                // Log the reset reason.
-                auto resetReason = esp_reset_reason();
-                ESP_LOGI(TAG, "esp_reset_reason: %d", resetReason);
-
-                self->beginUI();
-            } else {
-                self->_loadingUI->setError(Messages::failedToConnect);
-                self->_loadingUI->setState(LoadingUIState::Error);
-                self->_loadingUI->redraw();
-            }
-        },
-        (uintptr_t)this);
+            beginUI();
+        } else {
+            _loadingUI->setError(Messages::failedToConnect);
+            _loadingUI->setState(LoadingUIState::Error);
+            _loadingUI->redraw();
+        }
+    });
 
     _mqttConnection->begin();
 }
@@ -157,34 +147,26 @@ void Application::beginUI() {
 
     _thermostatUI = new ThermostatUI(_parent);
 
-    _mqttConnection->onThermostatStateChanged(
-        [](auto data) {
-            ESP_LOGI(TAG, "Sending new state from MQTT to the thermostat");
+    _mqttConnection->onThermostatStateChanged([this] {
+        ESP_LOGI(TAG, "Sending new state from MQTT to the thermostat");
 
-            auto self = (Application *)data;
+        auto newState = _mqttConnection->getState();
+        auto setpointChanged = _thermostatUI->getState().setpoint != newState.setpoint;
 
-            auto newState = self->_mqttConnection->getState();
-            auto setpointChanged = self->_thermostatUI->getState().setpoint != newState.setpoint;
+        _thermostatUI->setState(newState);
 
-            self->_thermostatUI->setState(newState);
+        if (setpointChanged) {
+            _panel.displayOn();
+        }
+    });
 
-            if (setpointChanged) {
-                self->_panel.displayOn();
-            }
-        },
-        (uintptr_t)this);
+    _thermostatUI->onSetpointChanged([this](auto setpoint) {
+        ESP_LOGI(TAG, "Sending new setpoint from the thermostat to MQTT");
 
-    _thermostatUI->onSetpointChanged(
-        [](auto setpoint, auto data) {
-            ESP_LOGI(TAG, "Sending new setpoint from the thermostat to MQTT");
-
-            auto self = (Application *)data;
-
-            auto state = self->_mqttConnection->getState();
-            state.setpoint = setpoint;
-            self->_mqttConnection->setState(state);
-        },
-        (uintptr_t)this);
+        auto state = _mqttConnection->getState();
+        state.setpoint = setpoint;
+        _mqttConnection->setState(state);
+    });
 
     _thermostatUI->begin();
     _thermostatUI->setState(_mqttConnection->getState());

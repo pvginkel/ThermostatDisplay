@@ -2,78 +2,90 @@
 
 #include "Queue.h"
 
-class Callback {
-public:
-    using Func = void (*)(uintptr_t);
-
-private:
-    Func _func;
-    uintptr_t _data;
-
-public:
-    Callback() : _func(nullptr), _data((uintptr_t) nullptr) {}
-
-    void set(Func func, uintptr_t data) {
-        _func = func;
-        _data = data;
-    }
-
-    bool call() {
-        if (_func) {
-            _func(_data);
-            return true;
-        }
-        return false;
-    }
-
-    void queue(Queue* queue) {
-        queue->enqueue(Task([](auto data) { ((Callback*)data)->call(); }, (uintptr_t)this));
-    }
-};
-
 template <typename Arg>
-class CallbackArg {
+class Callback {
     static_assert((std::is_trivially_copyable<Arg>::value), "Arg must be trivially copyable");
 
-public:
-    using Func = void (*)(Arg, uintptr_t);
+    struct Node {
+        function<void(Arg)> func;
+        Node* next;
 
-private:
-    struct Payload {
-        CallbackArg<Arg>* self;
-        Arg arg;
-
-        Payload(CallbackArg<Arg>* self, Arg arg) : self(self), arg(arg) {}
+        Node(const function<void(Arg)>& func, Node* next) : func(func), next(next) {}
     };
 
-    Func _func;
-    uintptr_t _data;
+    Node* _node;
 
 public:
-    CallbackArg() : _func(nullptr), _data((uintptr_t) nullptr) {}
+    Callback() : _node(nullptr) {}
 
-    void set(Func func, uintptr_t data) {
-        _func = func;
-        _data = data;
+    ~Callback() {
+        while (_node) {
+            auto node = _node;
+            _node = node->next;
+            delete node;
+        }
     }
 
+    void add(const function<void(Arg)>& func) { _node = new Node(func, _node); }
+
     bool call(Arg arg) {
-        if (_func) {
-            _func(arg, _data);
-            return true;
+        auto node = _node;
+        if (!node) {
+            return false;
         }
-        return false;
+
+        while (node) {
+            node->func(arg);
+            node = node->next;
+        }
+
+        return true;
     }
 
     void queue(Queue* queue, Arg arg) {
-        queue->enqueue(Task(
-            [](uintptr_t data) {
-                const auto payload = (Payload*)data;
+        queue->enqueue([this, arg] { call(arg); });
+    }
+};
 
-                payload->self->call(payload->arg);
+template <>
+class Callback<void> {
+    struct Node {
+        function<void()> func;
+        Node* next;
 
-                delete payload;
-            },
-            (uintptr_t) new Payload(this, arg)));
+        Node(const function<void()>& func, Node* next) : func(func), next(next) {}
+    };
+
+    Node* _node;
+
+public:
+    Callback() : _node(nullptr) {}
+
+    ~Callback() {
+        while (_node) {
+            auto node = _node;
+            _node = node->next;
+            delete node;
+        }
+    }
+
+    void add(const function<void()>& func) { _node = new Node(func, _node); }
+
+    bool call() {
+        auto node = _node;
+        if (!node) {
+            return false;
+        }
+
+        while (node) {
+            node->func();
+            node = node->next;
+        }
+
+        return true;
+    }
+
+    void queue(Queue* queue) {
+        queue->enqueue([this] { call(); });
     }
 };

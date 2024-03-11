@@ -8,7 +8,7 @@ enum class LoadingUIState { None, Loading, Error };
 class LoadingUI : public LvglUI {
     const char* _title;
     const char* _error;
-    Callback _retryClicked;
+    Callback<void> _retryClicked;
     LoadingUIState _state;
 
 public:
@@ -18,7 +18,7 @@ public:
     void setTitle(const char* title) { _title = title; }
     void setError(const char* error) { _error = error; }
     void redraw() { render(); }
-    void onRetryClicked(Callback::Func func, uintptr_t data = 0) { _retryClicked.set(func, data); }
+    void onRetryClicked(function<void()> func) { _retryClicked.add(func); }
 
 protected:
     void doRender(lv_obj_t* parent) override;

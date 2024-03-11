@@ -25,17 +25,15 @@ class MQTTConnection {
     string _stateTopic;
     string _logTopic;
     ThermostatState _state;
-    CallbackArg<MQTTConnectionState> _stateChanged;
-    Callback _thermostatStateChanged;
+    Callback<MQTTConnectionState> _stateChanged;
+    Callback<void> _thermostatStateChanged;
 
 public:
     MQTTConnection(Queue *synchronizationQueue, const DeviceConfiguration &configuration);
 
     void begin();
-    void onStateChanged(CallbackArg<MQTTConnectionState>::Func func, uintptr_t data = 0) {
-        _stateChanged.set(func, data);
-    }
-    void onThermostatStateChanged(Callback::Func func, uintptr_t data = 0) { _thermostatStateChanged.set(func, data); }
+    void onStateChanged(function<void(MQTTConnectionState)> func) { _stateChanged.add(func); }
+    void onThermostatStateChanged(function<void()> func) { _thermostatStateChanged.add(func); }
     ThermostatState getState() { return _state; }
     void setState(ThermostatState &state, bool force = false);
 
