@@ -44,6 +44,10 @@ void LoadingUI::renderTitle(lv_obj_t* parent, double offsetY) {
 }
 
 void LoadingUI::renderLoading(lv_obj_t* parent) {
+    if (_silent) {
+        return;
+    }
+
     renderTitle(parent, 19);
 
     _loadingCircles.clear();

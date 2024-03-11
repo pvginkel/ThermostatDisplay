@@ -51,7 +51,10 @@ void Application::setupFlash() {
 void Application::begin() {
     ESP_LOGI(TAG, "Setting up loading UI");
 
-    _loadingUI = new LoadingUI(_parent);
+    // Don't show the loading UI if we're booting up from a brownout reset.
+    const auto silent = esp_reset_reason() == ESP_RST_BROWNOUT;
+
+    _loadingUI = new LoadingUI(_parent, silent);
 
     _loadingUI->begin();
     _loadingUI->setTitle(Messages::connectingToWifi);

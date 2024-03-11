@@ -11,10 +11,11 @@ class LoadingUI : public LvglUI {
     Callback<void> _retryClicked;
     LoadingUIState _state;
     vector<lv_obj_t*> _loadingCircles;
+    bool _silent;
 
 public:
-    LoadingUI(lv_obj_t* parent) : LvglUI(parent), _title(), _error(), _state() {}
-    ~LoadingUI();
+    LoadingUI(lv_obj_t* parent, bool silent) : LvglUI(parent), _title(), _error(), _state(), _silent(silent) {}
+    ~LoadingUI() override;
 
     void setState(LoadingUIState state) { _state = state; }
     void setTitle(const char* title) { _title = title; }
