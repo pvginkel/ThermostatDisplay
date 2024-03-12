@@ -26,13 +26,13 @@ class Application {
 public:
     Application(ESP_Panel& panel);
 
-    void begin(lv_disp_t* disp);
+    void begin(lv_disp_t* disp, bool silent);
     void process();
 
 private:
     void setupI2C();
     void setupFlash();
-    void begin();
+    void begin(bool silent);
     void beginWifi();
     void beginWifiAvailable();
     void beginMQTT();

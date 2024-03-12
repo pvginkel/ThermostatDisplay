@@ -27,7 +27,7 @@ ESP_Panel::ESP_Panel()
     : _panel_handle(nullptr),
       _touch_handle(nullptr),
       _displayOffTimer(nullptr),
-      _displayState(DisplayState::On),
+      _displayState(DisplayState::Off),
       _lastBacklightChange(0) {
     _instance = this;
 }
@@ -123,7 +123,7 @@ void ESP_Panel::increase_lvgl_tick(void *arg) {
     lv_tick_inc(LVGL_TICK_PERIOD_MS);
 }
 
-lv_disp_t *ESP_Panel::begin() {
+lv_disp_t *ESP_Panel::begin(bool silent) {
     static lv_disp_draw_buf_t disp_buf;  // contains internal graphic buffer(s) called draw buffer(s)
     static lv_disp_drv_t disp_drv;       // contains callback functions
 
@@ -217,7 +217,12 @@ lv_disp_t *ESP_Panel::begin() {
     ESP_ERROR_CHECK(i2c_master_init());
     ESP_LOGI(TAG, "I2C initialized successfully");
 
-    set_ch422g_pins(IO_EXPANDER_TOUCH_PANEL_RESET | IO_EXPANDER_LCD_BACKLIGHT | IO_EXPANDER_LCD_RESET);
+    auto pins = IO_EXPANDER_TOUCH_PANEL_RESET | IO_EXPANDER_LCD_RESET;
+    if (!silent) {
+        pins |= IO_EXPANDER_LCD_BACKLIGHT;
+        _displayState = DisplayState::On;
+    }
+    set_ch422g_pins(pins);
 
     esp_lcd_panel_io_handle_t tp_io_handle = NULL;
 

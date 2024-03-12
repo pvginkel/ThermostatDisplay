@@ -16,7 +16,7 @@ Application::Application(ESP_Panel &panel)
       _thermostatUI(nullptr),
       _motionSensor(&_queue) {}
 
-void Application::begin(lv_disp_t *disp) {
+void Application::begin(lv_disp_t *disp, bool silent) {
     ESP_LOGI(TAG, "Setting up the log manager");
 
     _logManager.begin();
@@ -34,7 +34,7 @@ void Application::begin(lv_disp_t *disp) {
     lv_obj_set_style_bg_color(_parent, lv_color_white(), 0);
 
     setupFlash();
-    begin();
+    begin(silent);
 }
 
 void Application::setupFlash() {
@@ -48,12 +48,8 @@ void Application::setupFlash() {
     ESP_ERROR_CHECK(ret);
 }
 
-void Application::begin() {
+void Application::begin(bool silent) {
     ESP_LOGI(TAG, "Setting up loading UI");
-
-    // Don't show the loading UI if we're booting up from a brownout reset.
-    const auto resetReason = esp_reset_reason();
-    const auto silent = resetReason == ESP_RST_BROWNOUT || resetReason == ESP_RST_WDT;
 
     _loadingUI = new LoadingUI(_parent, silent);
 

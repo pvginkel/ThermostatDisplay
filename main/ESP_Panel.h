@@ -24,7 +24,7 @@ class ESP_Panel {  // we use two semaphores to sync the VSYNC event and the LVGL
 public:
     ESP_Panel();
 
-    lv_disp_t *begin();
+    lv_disp_t *begin(bool silent);
     void process();
     void displayOn();
     void displayOff();
