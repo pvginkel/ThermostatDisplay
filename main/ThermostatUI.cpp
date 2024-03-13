@@ -50,7 +50,7 @@ void ThermostatUI::doRender(lv_obj_t* parent) {
     lv_style_init(&_temperatureButtonStyle);
     lv_style_set_bg_color(&_temperatureButtonStyle, lv_color_black());
     lv_style_set_border_color(&_temperatureButtonStyle, lv_theme_get_color_primary(parent));
-    lv_style_set_border_width(&_temperatureButtonStyle, 2);
+    lv_style_set_border_width(&_temperatureButtonStyle, 4);
     lv_style_set_text_font(&_temperatureButtonStyle, NORMAL_FONT);
 
     lv_style_init(&_normalLabelStyle);
