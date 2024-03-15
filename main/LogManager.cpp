@@ -53,6 +53,14 @@ void LogManager::begin() {
     };
 
     ESP_ERROR_CHECK(esp_timer_create(&displayOffTimerArgs, &_logTimer));
+
+    esp_register_shutdown_handler([]() {
+        if (_instance) {
+            ESP_LOGI(TAG, "Uploading log messages before restart");
+
+            _instance->uploadLogs();
+        }
+    });
 }
 
 void LogManager::setConfiguration(const DeviceConfiguration& configuration) {
