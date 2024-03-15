@@ -26,7 +26,7 @@ void LoadingUI::doRender(lv_obj_t* parent) {
 }
 
 void LoadingUI::resetRender() {
-    lv_anim_delete(this, loadingAnimationCallback);
+    lv_anim_del(this, loadingAnimationCallback);
 
     _loadingCircles.clear();
 }
