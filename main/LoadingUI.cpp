@@ -46,8 +46,6 @@ void LoadingUI::renderLoading(lv_obj_t* parent) {
 
     renderTitle(parent, 19);
 
-    _loadingCircles.clear();
-
     auto centerX = pw(50);
     auto centerY = ph(50);
     auto radius = pw(CIRCLES_RADIUS);

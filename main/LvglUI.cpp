@@ -24,8 +24,6 @@ void lv_obj_set_bounds(lv_obj_t* obj, int x, int y, int width, int height, lv_te
 
 LvglUI::LvglUI(lv_obj_t* parent) : _parent(parent), _screenWidth(), _screenHeight() {}
 
-LvglUI::~LvglUI() { resetRender(); }
-
 void LvglUI::begin() {
     _screenWidth = LV_HOR_RES;
     _screenHeight = LV_VER_RES;
@@ -40,8 +38,6 @@ void LvglUI::render() {
                           LV_THEME_DEFAULT_DARK, LV_FONT_DEFAULT);
 
     lv_obj_set_style_bg_color(_parent, lv_color_black(), LV_PART_MAIN);
-
-    resetRender();
 
     doRender(_parent);
 }

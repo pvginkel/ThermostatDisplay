@@ -23,13 +23,12 @@ public:
     LvglUI(LvglUI&& other) noexcept = delete;
     LvglUI& operator=(const LvglUI& other) = delete;
     LvglUI& operator=(LvglUI&& other) noexcept = delete;
-    virtual ~LvglUI();
+    virtual ~LvglUI() {};
 
     void begin();
 
 protected:
     void render();
-    virtual void resetRender() {}
     virtual void doRender(lv_obj_t* parent) = 0;
     virtual void doBegin() {}
 
