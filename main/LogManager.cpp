@@ -27,7 +27,7 @@ int LogManager::logHandler(const char* message, va_list va) {
     if (result >= 0 && result < BUFFER_SIZE) {
         startTimer = _instance->_configuration != nullptr && _instance->_messages.size() == 0;
 
-        _instance->_messages.push_back(strdup(_buffer));
+        _instance->_messages.push_back(Message(strdup(_buffer), esp_get_millis()));
     }
 
     xSemaphoreGive(_instance->_lock);
@@ -91,6 +91,8 @@ void LogManager::uploadLogs() {
     while (offset < messages.size()) {
         buffer.clear();
 
+        auto millis = esp_get_millis();
+
         for (auto i = 0; i < BLOCK_SIZE; i++) {
             auto index = offset++;
             if (index >= messages.size()) {
@@ -101,7 +103,8 @@ void LogManager::uploadLogs() {
 
             auto root = cJSON_CreateObject();
 
-            cJSON_AddStringToObject(root, "message", message);
+            cJSON_AddStringToObject(root, "message", message.buffer);
+            cJSON_AddNumberToObject(root, "relative_time", millis - message.time);
             cJSON_AddStringToObject(root, "entity_id", _configuration->getDeviceEntityId().c_str());
 
             auto json = cJSON_PrintUnformatted(root);
@@ -112,7 +115,7 @@ void LogManager::uploadLogs() {
 
             cJSON_free(json);
 
-            free(message);
+            free(message.buffer);
         }
 
         esp_http_client_config_t config = {

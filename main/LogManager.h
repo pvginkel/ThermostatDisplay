@@ -3,12 +3,19 @@
 #include "DeviceConfiguration.h"
 
 class LogManager {
+    struct Message {
+        char* buffer;
+        uint32_t time;
+
+        Message(char* buffer, uint32_t time) : buffer(buffer), time(time) {}
+    };
+
     static LogManager* _instance;
     static char* _buffer;
 
     vprintf_like_t _defaultLogHandler;
     SemaphoreHandle_t _lock;
-    vector<char*> _messages;
+    vector<Message> _messages;
     const DeviceConfiguration* _configuration;
     esp_timer_handle_t _logTimer;
 
