@@ -1,5 +1,5 @@
 idf_component_register(
-    SRCS "LogManager.cpp" "lv_font_roboto_100_digits.c" "lv_font_roboto_40.c" "MotionSensor.cpp" "DeviceConfiguration.cpp" "OTAManager.cpp" "CH422G.cpp" "Queue.cpp" "main.cpp" "Application.cpp" "MQTTConnection.cpp" "support.cpp" "WifiConnection.cpp"
+    SRCS "LogManager.cpp" "Mutex.cpp" "lv_font_roboto_100_digits.c" "lv_font_roboto_40.c" "MotionSensor.cpp" "DeviceConfiguration.cpp" "OTAManager.cpp" "CH422G.cpp" "Queue.cpp" "main.cpp" "Application.cpp" "MQTTConnection.cpp" "support.cpp" "WifiConnection.cpp"
     "LvglUI.cpp" "Messages.cpp" "LoadingUI.cpp" "ThermostatUI.cpp"
     "ESP_Panel.cpp"
     INCLUDE_DIRS "."

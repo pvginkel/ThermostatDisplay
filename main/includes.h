@@ -61,4 +61,5 @@ typedef void* QueueHandle_t;
 #endif
 
 #include "Callback.h"
+#include "Mutex.h"
 #include "support.h"
