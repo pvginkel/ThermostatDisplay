@@ -10,9 +10,7 @@ constexpr auto CIRCLES = 11;
 constexpr auto CIRCLES_RADIUS = 10;
 constexpr auto CIRCLE_RADIUS = 4;
 
-LoadingUI::~LoadingUI() {
-    resetRender();
-}
+LoadingUI::~LoadingUI() { resetRender(); }
 
 void LoadingUI::doRender(lv_obj_t* parent) {
     resetRender();
@@ -28,11 +26,9 @@ void LoadingUI::doRender(lv_obj_t* parent) {
 }
 
 void LoadingUI::resetRender() {
-    switch (_state) {
-    case LoadingUIState::Loading:
-        lv_anim_del(this, loadingAnimationCallback);
-        break;
-    }
+    lv_anim_delete(this, loadingAnimationCallback);
+
+    _loadingCircles.clear();
 }
 
 void LoadingUI::renderTitle(lv_obj_t* parent, double offsetY) {
