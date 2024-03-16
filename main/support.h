@@ -57,5 +57,6 @@ lv_obj_t* lv_spinner_create(lv_obj_t* parent, uint32_t t, uint32_t angle);
 
 esp_err_t esp_http_download_string(const esp_http_client_config_t& config, string& target, size_t maxLength = 0);
 esp_err_t esp_http_upload_string(const esp_http_client_config_t& config, const char* const data);
+char const* esp_reset_reason_to_name(esp_reset_reason_t reason);
 
 #endif

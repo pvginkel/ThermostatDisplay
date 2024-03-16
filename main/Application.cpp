@@ -129,7 +129,7 @@ void Application::beginMQTT() {
 
             // Log the reset reason.
             auto resetReason = esp_reset_reason();
-            ESP_LOGI(TAG, "esp_reset_reason: %d", resetReason);
+            ESP_LOGI(TAG, "esp_reset_reason: %s (%d)", esp_reset_reason_to_name(resetReason), resetReason);
 
             beginUI();
         } else {
