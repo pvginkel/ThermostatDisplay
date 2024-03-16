@@ -120,8 +120,7 @@ static esp_err_t esp_lcd_touch_gt911_read_data(esp_lcd_touch_handle_t tp)
 
     assert(tp != NULL);
 
-    err = touch_gt911_i2c_read(tp, ESP_LCD_TOUCH_GT911_READ_XY_REG, buf, 1);
-    ESP_RETURN_ON_ERROR(err, TAG, "I2C read error!");
+    ESP_ERROR_CHECK(touch_gt911_i2c_read(tp, ESP_LCD_TOUCH_GT911_READ_XY_REG, buf, 1));
 
     /* Any touch data? */
     if ((buf[0] & 0x80) == 0x00) {
@@ -135,12 +134,10 @@ static esp_err_t esp_lcd_touch_gt911_read_data(esp_lcd_touch_handle_t tp)
         }
 
         /* Read all points */
-        err = touch_gt911_i2c_read(tp, ESP_LCD_TOUCH_GT911_READ_XY_REG + 1, &buf[1], touch_cnt * 8);
-        ESP_RETURN_ON_ERROR(err, TAG, "I2C read error!");
+        ESP_ERROR_CHECK(touch_gt911_i2c_read(tp, ESP_LCD_TOUCH_GT911_READ_XY_REG + 1, &buf[1], touch_cnt * 8));
 
         /* Clear all */
-        err = touch_gt911_i2c_write(tp, ESP_LCD_TOUCH_GT911_READ_XY_REG, clear);
-        ESP_RETURN_ON_ERROR(err, TAG, "I2C read error!");
+        ESP_ERROR_CHECK(touch_gt911_i2c_write(tp, ESP_LCD_TOUCH_GT911_READ_XY_REG, clear));
 
         taskENTER_CRITICAL(&tp->data.lock);
 
