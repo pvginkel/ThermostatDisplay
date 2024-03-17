@@ -357,8 +357,9 @@ void ESP_Panel::handleDisplayState() {
 
             esp_lcd_rgb_panel_restart(_panel_handle);
 #endif
-            turnBacklightOn(millis);
 
+            _lastBacklightChange = millis;
+            set_ch422g_pins(IO_EXPANDER_TOUCH_PANEL_RESET | IO_EXPANDER_LCD_BACKLIGHT | IO_EXPANDER_LCD_RESET);
             break;
 
         case DisplayState::PendingOff:
@@ -370,43 +371,6 @@ void ESP_Panel::handleDisplayState() {
             set_ch422g_pins(IO_EXPANDER_TOUCH_PANEL_RESET | IO_EXPANDER_LCD_RESET);
             break;
     }
-}
-
-void ESP_Panel::turnBacklightOn(uint32_t millis) {
-    // Put WiFi and the CPU into a low power state to prevent brownouts.
-
-    /*
-    esp_pm_config_t currentPowerConfig;
-    ESP_ERROR_CHECK(esp_pm_get_configuration(&currentPowerConfig));
-
-    auto lowPowerConfig = currentPowerConfig;
-
-    lowPowerConfig.min_freq_mhz = 10;
-    lowPowerConfig.max_freq_mhz = 10;
-    ESP_ERROR_CHECK(esp_pm_configure(&lowPowerConfig));
-    */
-
-    ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_MIN_MODEM));
-
-    // Give the system some time to adjust to the new power mode.
-    vTaskDelay(pdMS_TO_TICKS(1));
-
-    _lastBacklightChange = millis;
-    set_ch422g_pins(IO_EXPANDER_TOUCH_PANEL_RESET | IO_EXPANDER_LCD_BACKLIGHT | IO_EXPANDER_LCD_RESET);
-
-    // Give the system some time to turn on the backlight.
-    vTaskDelay(pdMS_TO_TICKS(50));
-
-    // Put back into normal state.
-
-    /*
-    ESP_ERROR_CHECK(esp_pm_configure(&currentPowerConfig));
-    */
-
-    ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_NONE));
-
-    // Give the system some time to adjust to the new power mode.
-    vTaskDelay(pdMS_TO_TICKS(1));
 }
 
 void ESP_Panel::displayOn() {

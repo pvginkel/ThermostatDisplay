@@ -33,6 +33,5 @@ private:
     esp_err_t i2c_master_init();
     void resetDisplayOffTimer();
     void handleDisplayState();
-    void turnBacklightOn(uint32_t millis);
     void lvgl_touch_cb(lv_indev_drv_t *drv, lv_indev_data_t *data);
 };
