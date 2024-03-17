@@ -1,6 +1,8 @@
 # ESP LCD Touch GT911 Controller
 
-Implementation of the GT911 touch controller with esp_lcd_touch component. 
+[![Component Registry](https://components.espressif.com/components/espressif/esp_lcd_touch_gt911/badge.svg)](https://components.espressif.com/components/espressif/esp_lcd_touch_gt911)
+
+Implementation of the GT911 touch controller with esp_lcd_touch component.
 
 | Touch controller | Communication interface | Component name | Link to datasheet |
 | :--------------: | :---------------------: | :------------: | :---------------: |
@@ -9,7 +11,7 @@ Implementation of the GT911 touch controller with esp_lcd_touch component.
 ## Add to project
 
 Packages from this repository are uploaded to [Espressif's component service](https://components.espressif.com/).
-You can add them to your project via `idf.py add-dependancy`, e.g. 
+You can add them to your project via `idf.py add-dependancy`, e.g.
 ```
     idf.py add-dependency esp_lcd_touch_gt911==1.0.0
 ```
@@ -38,7 +40,7 @@ Initialization of the touch component.
             .mirror_y = 0,
         },
     };
-    
+
     esp_lcd_touch_handle_t tp;
     esp_lcd_touch_new_i2c_gt911(io_handle, &tp_cfg, &tp);
 ```
@@ -57,5 +59,5 @@ Get one X and Y coordinates with strength of touch.
     uint16_t touch_strength[1];
     uint8_t touch_cnt = 0;
 
-    bool touchpad_pressed = esp_lcd_touch_get_coordinates(tp, touch_x, touch_y, touch_btn, &touch_cnt, 1);
+    bool touchpad_pressed = esp_lcd_touch_get_coordinates(tp, touch_x, touch_y, touch_strength, &touch_cnt, 1);
 ```
