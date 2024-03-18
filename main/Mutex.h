@@ -24,7 +24,18 @@ public:
     Mutex();
     ~Mutex();
 
-    MutexLock take(TickType_t xTicksToWait);
+    [[nodiscard]] MutexLock take(TickType_t xTicksToWait = portMAX_DELAY);
+
+    template <typename Result>
+    Result with(function<Result(void)> func, TickType_t xTicksToWait = portMAX_DELAY) {
+        auto lock = take(xTicksToWait);
+        return func();
+    }
+
+    void with(function<void(void)> func, TickType_t xTicksToWait = portMAX_DELAY) {
+        auto lock = take(xTicksToWait);
+        func();
+    }
 
 private:
     void give();
