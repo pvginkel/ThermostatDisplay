@@ -61,12 +61,18 @@ void ESP_Panel::lvgl_touch_cb(lv_indev_drv_t *drv, lv_indev_data_t *data) {
     uint16_t touchpad_y[1] = {0};
     uint8_t touchpad_cnt = 0;
 
-    /* Read touch controller data */
-    esp_lcd_touch_read_data(_touch_handle);
+    bool touchpad_pressed;
 
-    /* Get coordinates */
-    bool touchpad_pressed =
-        esp_lcd_touch_get_coordinates(_touch_handle, touchpad_x, touchpad_y, NULL, &touchpad_cnt, 1);
+    // Lock region.
+    {
+        _i2cMutex.take(portMAX_DELAY);
+
+        /* Read touch controller data */
+        esp_lcd_touch_read_data(_touch_handle);
+
+        /* Get coordinates */
+        touchpad_pressed = esp_lcd_touch_get_coordinates(_touch_handle, touchpad_x, touchpad_y, NULL, &touchpad_cnt, 1);
+    }
 
     if (touchpad_pressed && touchpad_cnt > 0) {
         if (_displayState != DisplayState::On) {
@@ -359,7 +365,12 @@ void ESP_Panel::handleDisplayState() {
 #endif
 
             _lastBacklightChange = millis;
-            set_ch422g_pins(IO_EXPANDER_TOUCH_PANEL_RESET | IO_EXPANDER_LCD_BACKLIGHT | IO_EXPANDER_LCD_RESET);
+
+            // Lock region.
+            {
+                _i2cMutex.take(portMAX_DELAY);
+                set_ch422g_pins(IO_EXPANDER_TOUCH_PANEL_RESET | IO_EXPANDER_LCD_BACKLIGHT | IO_EXPANDER_LCD_RESET);
+            }
             break;
 
         case DisplayState::PendingOff:
@@ -368,7 +379,12 @@ void ESP_Panel::handleDisplayState() {
             _displayState = DisplayState::Off;
 
             _lastBacklightChange = millis;
-            set_ch422g_pins(IO_EXPANDER_TOUCH_PANEL_RESET | IO_EXPANDER_LCD_RESET);
+
+            // Lock region.
+            {
+                _i2cMutex.take(portMAX_DELAY);
+                set_ch422g_pins(IO_EXPANDER_TOUCH_PANEL_RESET | IO_EXPANDER_LCD_RESET);
+            }
             break;
     }
 }

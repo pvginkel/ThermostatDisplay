@@ -15,6 +15,7 @@ class ESP_Panel {  // we use two semaphores to sync the VSYNC event and the LVGL
     esp_timer_handle_t _displayOffTimer;
     DisplayState _displayState;
     uint32_t _lastBacklightChange;
+    Mutex _i2cMutex;
 
 #if CONFIG_DISPLAY_AVOID_TEAR_EFFECT_WITH_SEM
     SemaphoreHandle_t sem_vsync_end;
