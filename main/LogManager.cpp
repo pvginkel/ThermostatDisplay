@@ -18,30 +18,26 @@ int LogManager::logHandler(const char* message, va_list va) {
 
     va_end(vaCopy);
 
-    xSemaphoreTake(_instance->_lock, portMAX_DELAY);
+    return _instance->_mutex.with<int>([message, va]() {
+        auto result = vsnprintf(_buffer, BUFFER_SIZE, message, va);
 
-    auto result = vsnprintf(_buffer, BUFFER_SIZE, message, va);
+        bool startTimer = false;
 
-    bool startTimer = false;
+        if (result >= 0 && result < BUFFER_SIZE) {
+            startTimer = _instance->_configuration && _instance->_messages.size() == 0;
 
-    if (result >= 0 && result < BUFFER_SIZE) {
-        startTimer = _instance->_configuration != nullptr && _instance->_messages.size() == 0;
+            _instance->_messages.push_back(Message(strdup(_buffer), esp_get_millis()));
+        }
 
-        _instance->_messages.push_back(Message(strdup(_buffer), esp_get_millis()));
-    }
+        if (startTimer) {
+            _instance->startTimer();
+        }
 
-    xSemaphoreGive(_instance->_lock);
-
-    if (startTimer) {
-        _instance->startTimer();
-    }
-
-    return result;
+        return result;
+    });
 }
 
-LogManager::LogManager() : _defaultLogHandler(nullptr), _lock(xSemaphoreCreateMutex()), _configuration(nullptr) {
-    _instance = this;
-}
+LogManager::LogManager() : _defaultLogHandler(nullptr), _configuration(nullptr) { _instance = this; }
 
 void LogManager::begin() {
     _defaultLogHandler = esp_log_set_vprintf(logHandler);
@@ -64,13 +60,11 @@ void LogManager::begin() {
 }
 
 void LogManager::setConfiguration(const DeviceConfiguration& configuration) {
-    xSemaphoreTake(_lock, portMAX_DELAY);
+    auto startTimer = _mutex.with<bool>([this, configuration]() {
+        _configuration = &configuration;
 
-    _configuration = &configuration;
-
-    auto startTimer = _messages.size() > 0;
-
-    xSemaphoreGive(_lock);
+        return _messages.size() > 0;
+    });
 
     if (startTimer) {
         this->startTimer();
@@ -78,12 +72,17 @@ void LogManager::setConfiguration(const DeviceConfiguration& configuration) {
 }
 
 void LogManager::uploadLogs() {
-    xSemaphoreTake(_lock, portMAX_DELAY);
+    auto messages = _mutex.with<vector<Message>>([this]() {
+        if (!_configuration) {
+            return vector<Message>();
+        }
 
-    auto messages = _messages;
-    _messages.clear();
+        auto messages = _messages;
 
-    xSemaphoreGive(_lock);
+        _messages.clear();
+
+        return messages;
+    });
 
     string buffer;
     auto offset = 0;

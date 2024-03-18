@@ -14,7 +14,7 @@ class LogManager {
     static char* _buffer;
 
     vprintf_like_t _defaultLogHandler;
-    SemaphoreHandle_t _lock;
+    Mutex _mutex;
     vector<Message> _messages;
     const DeviceConfiguration* _configuration;
     esp_timer_handle_t _logTimer;
