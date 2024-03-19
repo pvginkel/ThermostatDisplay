@@ -218,12 +218,14 @@ lv_disp_t *ESP_Panel::begin(bool silent) {
     ESP_ERROR_CHECK(i2c_master_init());
     ESP_LOGI(TAG, "I2C initialized successfully");
 
+    ch422g_begin();
+
     auto pins = IO_EXPANDER_TOUCH_PANEL_RESET | IO_EXPANDER_LCD_RESET;
     if (!silent) {
         pins |= IO_EXPANDER_LCD_BACKLIGHT;
         _displayState = DisplayState::On;
     }
-    set_ch422g_pins(pins);
+    ch422g_write_output(pins);
 
     esp_lcd_panel_io_handle_t tp_io_handle = NULL;
 
@@ -362,7 +364,7 @@ void ESP_Panel::handleDisplayState() {
             _lastBacklightChange = millis;
 
             _i2cMutex.with([]() {
-                set_ch422g_pins(IO_EXPANDER_TOUCH_PANEL_RESET | IO_EXPANDER_LCD_BACKLIGHT | IO_EXPANDER_LCD_RESET);
+                ch422g_write_output(IO_EXPANDER_TOUCH_PANEL_RESET | IO_EXPANDER_LCD_BACKLIGHT | IO_EXPANDER_LCD_RESET);
             });
             break;
 
@@ -373,7 +375,7 @@ void ESP_Panel::handleDisplayState() {
 
             _lastBacklightChange = millis;
 
-            _i2cMutex.with([]() { set_ch422g_pins(IO_EXPANDER_TOUCH_PANEL_RESET | IO_EXPANDER_LCD_RESET); });
+            _i2cMutex.with([]() { ch422g_write_output(IO_EXPANDER_TOUCH_PANEL_RESET | IO_EXPANDER_LCD_RESET); });
             break;
     }
 }
