@@ -6,9 +6,14 @@
 
 #define SELF(e) ((LoadingUI*)lv_event_get_user_data((e)))
 
+static const char* TAG = "LoadingUI";
+
 constexpr auto CIRCLES = 11;
 constexpr auto CIRCLES_RADIUS = 10;
 constexpr auto CIRCLE_RADIUS = 4;
+
+LoadingUI::LoadingUI(lv_obj_t* parent, bool silent)
+    : LvglUI(parent), _title(), _error(), _state(), _silent(silent), _restartTimer(nullptr) {}
 
 LoadingUI::~LoadingUI() { resetRender(); }
 
@@ -29,6 +34,11 @@ void LoadingUI::resetRender() {
     lv_anim_del(this, loadingAnimationCallback);
 
     _loadingCircles.clear();
+
+    if (_restartTimer) {
+        ESP_ERROR_CHECK(esp_timer_delete(_restartTimer));
+        _restartTimer = nullptr;
+    }
 }
 
 void LoadingUI::renderTitle(lv_obj_t* parent, double offsetY) {
@@ -92,6 +102,19 @@ void LoadingUI::loadingAnimationCallback(void* var, int32_t v) {
 }
 
 void LoadingUI::renderError(lv_obj_t* parent) {
+    const esp_timer_create_args_t restartTimerArgs = {
+        .callback =
+            [](void* arg) {
+                ESP_LOGI(TAG, "Restarting in error screen");
+                esp_restart();
+            },
+        .arg = this,
+        .name = "restartTimer",
+    };
+
+    ESP_ERROR_CHECK(esp_timer_create(&restartTimerArgs, &_restartTimer));
+    ESP_ERROR_CHECK(esp_timer_start_once(_restartTimer, ESP_TIMER_SECONDS(CONFIG_DEVICE_RESTART_ON_FAILURE_INTERVAL)));
+
     renderTitle(parent, 13);
 
     auto error = lv_label_create(parent);

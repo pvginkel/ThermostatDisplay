@@ -24,6 +24,10 @@ menu "Device Configuration"
         int "Network connection attempts"
         default 1
 
+    config DEVICE_RESTART_ON_FAILURE_INTERVAL
+        int "Timeout after which the device restarts when on the error screen in seconds"
+        default 300
+
 endmenu
 
 menu "OTA Configuration"
