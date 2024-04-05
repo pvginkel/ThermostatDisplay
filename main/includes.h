@@ -54,6 +54,8 @@ using namespace std;
 #include "nvs_flash.h"
 #include "sdkconfig.h"
 
+#include "Mutex.h"
+
 #else
 
 typedef void* QueueHandle_t;
@@ -61,5 +63,4 @@ typedef void* QueueHandle_t;
 #endif
 
 #include "Callback.h"
-#include "Mutex.h"
 #include "support.h"

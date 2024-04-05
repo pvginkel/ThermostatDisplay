@@ -12,7 +12,9 @@ class LoadingUI : public LvglUI {
     LoadingUIState _state;
     vector<lv_obj_t*> _loadingCircles;
     bool _silent;
+#ifndef LV_SIMULATOR
     esp_timer_handle_t _restartTimer;
+#endif
 
 public:
     LoadingUI(lv_obj_t* parent, bool silent);

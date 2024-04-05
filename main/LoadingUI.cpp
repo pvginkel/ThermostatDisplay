@@ -13,7 +13,11 @@ constexpr auto CIRCLES_RADIUS = 10;
 constexpr auto CIRCLE_RADIUS = 4;
 
 LoadingUI::LoadingUI(lv_obj_t* parent, bool silent)
-    : LvglUI(parent), _title(), _error(), _state(), _silent(silent), _restartTimer(nullptr) {}
+    : LvglUI(parent), _title(), _error(), _state(), _silent(silent)
+#ifndef LV_SIMULATOR
+    , _restartTimer(nullptr)
+#endif
+{}
 
 LoadingUI::~LoadingUI() { resetRender(); }
 
@@ -35,10 +39,14 @@ void LoadingUI::resetRender() {
 
     _loadingCircles.clear();
 
+#ifndef LV_SIMULATOR
+
     if (_restartTimer) {
         ESP_ERROR_CHECK(esp_timer_delete(_restartTimer));
         _restartTimer = nullptr;
     }
+
+#endif
 }
 
 void LoadingUI::renderTitle(lv_obj_t* parent, double offsetY) {
@@ -102,6 +110,8 @@ void LoadingUI::loadingAnimationCallback(void* var, int32_t v) {
 }
 
 void LoadingUI::renderError(lv_obj_t* parent) {
+#ifndef LV_SIMULATOR
+
     const esp_timer_create_args_t restartTimerArgs = {
         .callback =
             [](void* arg) {
@@ -114,6 +124,8 @@ void LoadingUI::renderError(lv_obj_t* parent) {
 
     ESP_ERROR_CHECK(esp_timer_create(&restartTimerArgs, &_restartTimer));
     ESP_ERROR_CHECK(esp_timer_start_once(_restartTimer, ESP_TIMER_SECONDS(CONFIG_DEVICE_RESTART_ON_FAILURE_INTERVAL)));
+
+#endif
 
     renderTitle(parent, 13);
 
