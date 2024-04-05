@@ -43,17 +43,7 @@ string format(const char* fmt, ...);
 bool iequals(const string& a, const string& b);
 int hextoi(char c);
 
-void lv_label_get_text_size(lv_point_t* size_res, const lv_obj_t* obj, lv_coord_t letter_space, lv_coord_t line_space,
-                            lv_coord_t max_width, lv_text_flag_t flag);
-
-#ifdef LV_SIMULATOR
-
-#define lv_obj_set_style_bg_img_src lv_obj_set_style_bg_image_src
-#define lv_anim_set_time lv_anim_set_duration
-
-lv_obj_t* lv_spinner_create(lv_obj_t* parent, uint32_t t, uint32_t angle);
-
-#else
+#ifndef LV_SIMULATOR
 
 esp_err_t esp_http_download_string(const esp_http_client_config_t& config, string& target, size_t maxLength = 0);
 esp_err_t esp_http_upload_string(const esp_http_client_config_t& config, const char* const data);

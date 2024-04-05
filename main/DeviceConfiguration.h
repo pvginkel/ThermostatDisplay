@@ -11,6 +11,11 @@ private:
 
 public:
     DeviceConfiguration();
+    DeviceConfiguration(const DeviceConfiguration&) = delete;
+    DeviceConfiguration& operator=(const DeviceConfiguration&) = delete;
+    DeviceConfiguration(DeviceConfiguration&&) = delete;
+    DeviceConfiguration& operator=(DeviceConfiguration&&) = delete;
+
     esp_err_t load();
 
     const string& getEndpoint() const { return _endpoint; }

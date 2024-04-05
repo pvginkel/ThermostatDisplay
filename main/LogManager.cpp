@@ -60,7 +60,7 @@ void LogManager::begin() {
 }
 
 void LogManager::setConfiguration(const DeviceConfiguration& configuration) {
-    auto startTimer = _mutex.with<bool>([this, configuration]() {
+    auto startTimer = _mutex.with<bool>([this, &configuration]() {
         _configuration = &configuration;
 
         return _messages.size() > 0;

@@ -24,9 +24,12 @@ class ThermostatUI : public LvglUI {
     lv_color_t _arcBackgroundColor;
     lv_color_t _arcColor;
     lv_color_t _arcActiveColor;
+    lv_image_dsc_t _radialGradientDsc;
+    lv_obj_t* _radialGradientImage;
 
 public:
     ThermostatUI(lv_obj_t* parent);
+    ~ThermostatUI() override;
     const ThermostatState& getState() const { return _state; }
     void setState(const ThermostatState& state);
     void onSetpointChanged(function<void(double)> func) { _setpointChanged.add(func); }
