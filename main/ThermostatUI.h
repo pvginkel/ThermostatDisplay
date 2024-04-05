@@ -21,6 +21,9 @@ class ThermostatUI : public LvglUI {
     lv_obj_t* _localTemperatureCircle;
     lv_obj_t* _setpointCircle;
     Callback<double> _setpointChanged;
+    lv_color_t _arcBackgroundColor;
+    lv_color_t _arcColor;
+    lv_color_t _arcActiveColor;
 
 public:
     ThermostatUI(lv_obj_t* parent);
