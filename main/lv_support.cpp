@@ -28,7 +28,11 @@ void lv_image_create_radial_dsc(lv_image_dsc_t* image_dsc, lv_color_t start_colo
     auto height = image_dsc->header.h;
 
     image_dsc->data_size = width * height * (LV_COLOR_DEPTH / 8);
+#ifdef LV_SIMULATOR
+    image_dsc->data = (uint8_t*)malloc(image_dsc->data_size);
+#else
     image_dsc->data = (uint8_t*)heap_caps_malloc(image_dsc->data_size, MALLOC_CAP_SPIRAM);
+#endif
     image_dsc->header.cf = LV_COLOR_FORMAT_NATIVE;
 
     auto p = (uint8_t*)image_dsc->data;
