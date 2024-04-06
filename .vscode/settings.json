@@ -26,7 +26,8 @@
     "memory_resource": "cpp",
     "stop_token": "cpp",
     "*.inc": "c",
-    "functional": "cpp"
+    "functional": "cpp",
+    "stdarg.h": "c"
   },
   "cSpell.words": ["LOGI", "Lvgl", "MQTT", "roboto", "setpoint"],
   "files.exclude": {

@@ -60,10 +60,10 @@ static uint16_t dither_xy(int x, int y, uint8_t r, uint8_t g, uint8_t b) {
     g = closest_g(min(g + dither_tresshold_g[tresshold_id], 0xff));
     b = closest_rb(min(b + dither_tresshold_b[tresshold_id], 0xff));
 
-    return lv_color_to_u16(lv_color_make(r, g, b));
+    return lv_color_to16(lv_color_make(r, g, b));
 }
 
 /* Dithering Pixel from 32/24bit RGB */
-uint16_t dither_color_xy(uint32_t x, uint32_t y, lv_color_t col) {
-    return dither_xy(x, y, col.red, col.green, col.blue);
+uint16_t dither_color_xy(uint32_t x, uint32_t y, lv_color32_t col) {
+    return dither_xy(x, y, LV_COLOR_R(col), LV_COLOR_G(col), LV_COLOR_B(col));
 }

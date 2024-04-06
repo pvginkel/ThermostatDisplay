@@ -26,8 +26,9 @@ class ThermostatUI : public LvglUI {
     lv_color_t _arcBackgroundColor;
     lv_color_t _arcColor;
     lv_color_t _arcActiveColor;
+    lv_color32_t _arcActiveColor32;
     lv_color_t _notHeatingColor;
-    lv_image_dsc_t _radialGradientDsc;
+    lv_img_dsc_t _radialGradientDsc;
     lv_obj_t* _radialGradientImage;
     lv_obj_t* _modeButton;
     lv_obj_t* _msgbox;

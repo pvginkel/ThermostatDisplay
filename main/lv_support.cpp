@@ -20,10 +20,10 @@ void lv_label_get_text_size(lv_point_t* size_res, const lv_obj_t* obj, int32_t l
     const auto text = lv_label_get_text(obj);
     const auto font = lv_obj_get_style_text_font(obj, LV_PART_MAIN);
 
-    lv_text_get_size(size_res, text, font, letter_space, line_space, max_width, flag);
+    lv_txt_get_size(size_res, text, font, letter_space, line_space, max_width, flag);
 }
 
-void lv_image_create_radial_dsc(lv_image_dsc_t* image_dsc, lv_color_t start_color, lv_color_t end_color) {
+void lv_image_create_radial_dsc(lv_img_dsc_t* image_dsc, lv_color32_t start_color, lv_color32_t end_color) {
     auto width = image_dsc->header.w;
     auto height = image_dsc->header.h;
 
@@ -33,7 +33,7 @@ void lv_image_create_radial_dsc(lv_image_dsc_t* image_dsc, lv_color_t start_colo
 #else
     image_dsc->data = (uint8_t*)heap_caps_malloc(image_dsc->data_size, MALLOC_CAP_SPIRAM);
 #endif
-    image_dsc->header.cf = LV_COLOR_FORMAT_NATIVE;
+    image_dsc->header.cf = LV_IMG_CF_TRUE_COLOR;
 
     auto p = (uint8_t*)image_dsc->data;
     int cx = width / 2;
@@ -48,12 +48,26 @@ void lv_image_create_radial_dsc(lv_image_dsc_t* image_dsc, lv_color_t start_colo
             auto ratio = distance / min;
             auto mix = ratio < 0 ? 0 : ratio > 1 ? 255 : (int)(ratio * 255);
 
-            lv_write_color(&p, x, y, lv_color_mix(start_color, end_color, mix));
+            lv_write_color(&p, x, y, lv_color32_mix(start_color, end_color, mix));
         }
     }
 }
 
-void lv_write_color(uint8_t** p, uint32_t x, uint32_t y, lv_color_t color) {
+lv_color32_t lv_color32_mix(lv_color32_t c1, lv_color32_t c2, uint8_t mix) {
+    lv_color32_t ret;
+
+    LV_COLOR_R(ret) =
+        LV_UDIV255((uint16_t)LV_COLOR_R(c1) * mix + (uint16_t)LV_COLOR_R(c2) * (255 - mix) + LV_COLOR_MIX_ROUND_OFS);
+    LV_COLOR_G(ret) =
+        LV_UDIV255((uint16_t)LV_COLOR_G(c1) * mix + (uint16_t)LV_COLOR_G(c2) * (255 - mix) + LV_COLOR_MIX_ROUND_OFS);
+    LV_COLOR_B(ret) =
+        LV_UDIV255((uint16_t)LV_COLOR_B(c1) * mix + (uint16_t)LV_COLOR_B(c2) * (255 - mix) + LV_COLOR_MIX_ROUND_OFS);
+    LV_COLOR_A(ret) = 0xff;
+
+    return ret;
+}
+
+void lv_write_color(uint8_t** p, uint32_t x, uint32_t y, lv_color32_t color) {
 #if LV_COLOR_DEPTH == 32
     *((uint32_t*)(*p)) = lv_color_to_u32(color);
 #elif LV_COLOR_DEPTH == 16
@@ -63,4 +77,15 @@ void lv_write_color(uint8_t** p, uint32_t x, uint32_t y, lv_color_t color) {
 #endif
 
     (*p) += LV_COLOR_DEPTH / 8;
+}
+
+lv_color32_t lv_color32_make(uint8_t red, uint8_t green, uint8_t blue) {
+    lv_color32_t ret;
+
+    LV_COLOR_R(ret) = red;
+    LV_COLOR_G(ret) = green;
+    LV_COLOR_B(ret) = blue;
+    LV_COLOR_A(ret) = 0xff;
+
+    return ret;
 }
