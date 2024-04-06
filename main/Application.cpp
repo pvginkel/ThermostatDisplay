@@ -169,12 +169,16 @@ void Application::beginUI() {
     _mqttConnection->onThermostatStateChanged([this] {
         ESP_LOGI(TAG, "Sending new state from MQTT to the thermostat");
 
+        auto oldState = _thermostatUI->getState();
         auto newState = _mqttConnection->getState();
-        auto setpointChanged = _thermostatUI->getState().setpoint != newState.setpoint;
+
+        auto setpointChanged = oldState.setpoint != newState.setpoint;
+        auto modeChanged = oldState.mode != newState.mode;
+        auto stateChanged = oldState.state != newState.state;
 
         _thermostatUI->setState(newState);
 
-        if (setpointChanged) {
+        if (setpointChanged || modeChanged || stateChanged) {
             _panel.displayOn();
         }
     });
