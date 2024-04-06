@@ -147,6 +147,25 @@ void Application::beginUI() {
 
     _thermostatUI = new ThermostatUI(_parent);
 
+    _thermostatUI->onSetpointChanged([this](auto setpoint) {
+        ESP_LOGI(TAG, "Sending new setpoint from the thermostat to MQTT");
+
+        auto state = _mqttConnection->getState();
+        state.setpoint = setpoint;
+        _mqttConnection->setState(state);
+    });
+
+    _thermostatUI->onModeChanged([this](auto mode) {
+        ESP_LOGI(TAG, "Sending new mode from the thermostat to MQTT");
+
+        auto state = _mqttConnection->getState();
+        state.mode = mode;
+        _mqttConnection->setState(state);
+    });
+
+    _thermostatUI->begin();
+    _thermostatUI->setState(_mqttConnection->getState());
+
     _mqttConnection->onThermostatStateChanged([this] {
         ESP_LOGI(TAG, "Sending new state from MQTT to the thermostat");
 
@@ -159,17 +178,6 @@ void Application::beginUI() {
             _panel.displayOn();
         }
     });
-
-    _thermostatUI->onSetpointChanged([this](auto setpoint) {
-        ESP_LOGI(TAG, "Sending new setpoint from the thermostat to MQTT");
-
-        auto state = _mqttConnection->getState();
-        state.setpoint = setpoint;
-        _mqttConnection->setState(state);
-    });
-
-    _thermostatUI->begin();
-    _thermostatUI->setState(_mqttConnection->getState());
 }
 
 void Application::process() { _queue.process(); }
