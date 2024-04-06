@@ -254,17 +254,7 @@ lv_disp_t *ESP_Panel::begin(bool silent) {
 
     ESP_LOGI(TAG, "Initialize LVGL library");
 
-    lv_log_register_print_cb([](lv_log_level_t level, const char *buf) {
-        if (level >= LV_LOG_LEVEL_ERROR) {
-            ESP_LOGE("lvgl", "%s", buf);
-        } else if (level >= LV_LOG_LEVEL_WARN) {
-            ESP_LOGW("lvgl", "%s", buf);
-        } else if (level >= LV_LOG_LEVEL_INFO) {
-            ESP_LOGI("lvgl", "%s", buf);
-        } else {
-            ESP_LOGD("lvgl", "%s", buf);
-        }
-    });
+    lv_log_register_print_cb([](const char *buf) { ESP_LOGW("lvgl", "%s", buf); });
 
     lv_init();
     void *buf1 = NULL;
