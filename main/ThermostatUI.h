@@ -20,12 +20,17 @@ class ThermostatUI : public LvglUI {
     lv_obj_t* _setpointHeatingArc;
     lv_obj_t* _localTemperatureCircle;
     lv_obj_t* _setpointCircle;
+    lv_obj_t* _setpointOuterCircle;
     Callback<double> _setpointChanged;
+    Callback<ThermostatMode> _modeChanged;
     lv_color_t _arcBackgroundColor;
     lv_color_t _arcColor;
     lv_color_t _arcActiveColor;
+    lv_color_t _notHeatingColor;
     lv_image_dsc_t _radialGradientDsc;
     lv_obj_t* _radialGradientImage;
+    lv_obj_t* _modeButton;
+    lv_obj_t* _msgbox;
 
 public:
     ThermostatUI(lv_obj_t* parent);
@@ -33,6 +38,7 @@ public:
     const ThermostatState& getState() const { return _state; }
     void setState(const ThermostatState& state);
     void onSetpointChanged(function<void(double)> func) { _setpointChanged.add(func); }
+    void onModeChanged(function<void(ThermostatMode)> func) { _modeChanged.add(func); }
 
 protected:
     void doRender(lv_obj_t* parent) override;
@@ -52,4 +58,6 @@ private:
     double roundSetpoint(double setpoint);
     void renderState();
     void handleArcPressed(lv_event_t* e);
+    void handleMode();
+    void handleSetMode(ThermostatMode mode);
 };
