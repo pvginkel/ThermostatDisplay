@@ -5,17 +5,11 @@ menu "Device Configuration"
     config WIFI_SSID
         string "WiFi SSID"
 
-    config WIFI_PASSWORD
-        string "WiFi password"
-
     config MQTT_BROKER_URL
         string "MQTT broker URL"
 
     config MQTT_USER_ID
         string "MQTT user ID"
-
-    config MQTT_PASSWORD
-        string "MQTT password"
 
     config DEVICE_CONFIG_ENDPOINT
         string "Device config endpoint (%s becomes MAC address)"
