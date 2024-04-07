@@ -56,20 +56,18 @@ void lv_image_create_radial_dsc(lv_img_dsc_t* image_dsc, lv_color32_t start_colo
 lv_color32_t lv_color32_mix(lv_color32_t c1, lv_color32_t c2, uint8_t mix) {
     lv_color32_t ret;
 
-    LV_COLOR_R(ret) =
-        LV_UDIV255((uint16_t)LV_COLOR_R(c1) * mix + (uint16_t)LV_COLOR_R(c2) * (255 - mix) + LV_COLOR_MIX_ROUND_OFS);
-    LV_COLOR_G(ret) =
-        LV_UDIV255((uint16_t)LV_COLOR_G(c1) * mix + (uint16_t)LV_COLOR_G(c2) * (255 - mix) + LV_COLOR_MIX_ROUND_OFS);
-    LV_COLOR_B(ret) =
-        LV_UDIV255((uint16_t)LV_COLOR_B(c1) * mix + (uint16_t)LV_COLOR_B(c2) * (255 - mix) + LV_COLOR_MIX_ROUND_OFS);
-    LV_COLOR_A(ret) = 0xff;
+    ret.ch.red = LV_UDIV255((uint16_t)c1.ch.red * mix + (uint16_t)c2.ch.red * (255 - mix) + LV_COLOR_MIX_ROUND_OFS);
+    ret.ch.green =
+        LV_UDIV255((uint16_t)c1.ch.green * mix + (uint16_t)c2.ch.green * (255 - mix) + LV_COLOR_MIX_ROUND_OFS);
+    ret.ch.blue = LV_UDIV255((uint16_t)c1.ch.blue * mix + (uint16_t)c2.ch.blue * (255 - mix) + LV_COLOR_MIX_ROUND_OFS);
+    ret.ch.alpha = 0xff;
 
     return ret;
 }
 
 void lv_write_color(uint8_t** p, uint32_t x, uint32_t y, lv_color32_t color) {
 #if LV_COLOR_DEPTH == 32
-    *((uint32_t*)(*p)) = lv_color_to_u32(color);
+    *((uint32_t*)(*p)) = lv_color_to32(color);
 #elif LV_COLOR_DEPTH == 16
     *((uint16_t*)(*p)) = dither_color_xy(x, y, color);
 #else
@@ -82,10 +80,10 @@ void lv_write_color(uint8_t** p, uint32_t x, uint32_t y, lv_color32_t color) {
 lv_color32_t lv_color32_make(uint8_t red, uint8_t green, uint8_t blue) {
     lv_color32_t ret;
 
-    LV_COLOR_R(ret) = red;
-    LV_COLOR_G(ret) = green;
-    LV_COLOR_B(ret) = blue;
-    LV_COLOR_A(ret) = 0xff;
+    ret.ch.red = red;
+    ret.ch.green = green;
+    ret.ch.blue = blue;
+    ret.ch.alpha = 0xff;
 
     return ret;
 }

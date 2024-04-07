@@ -5,6 +5,7 @@
 #ifdef LV_SIMULATOR
 
 #pragma warning(disable : 4200)
+#define _CRT_NONSTDC_NO_WARNINGS
 
 #endif
 
@@ -54,43 +55,17 @@ using namespace std;
 #include "nvs_flash.h"
 #include "sdkconfig.h"
 
-#define LV_COLOR_R(c) (c).ch.red
-#define LV_COLOR_G(c) (c).ch.green
-#define LV_COLOR_B(c) (c).ch.blue
-#define LV_COLOR_A(c) (c).ch.alpha
-
-#define _strdup strdup
-
 #else
 
 typedef void* QueueHandle_t;
 
-#define lv_obj_set_style_bg_img_src lv_obj_set_style_bg_image_src
-#define lv_msgbox_get_btns lv_msgbox_get_footer
-#define LV_IMG_CF_TRUE_COLOR LV_COLOR_FORMAT_NATIVE
-#define lv_color_to16 lv_color_to_u16
-#define LV_COLOR_R(c) (c).red
-#define LV_COLOR_G(c) (c).green
-#define LV_COLOR_B(c) (c).blue
-#define LV_COLOR_A(c) (c).alpha
-
-static lv_obj_t* lv_msgbox_create(lv_obj_t* parent, const char* title, const char* text, const char** buttons,
-                                  bool add_close) {
-    auto msgbox = lv_msgbox_create(parent);
-
-    for (int i = 0;; i++) {
-        if (!buttons[i][0]) {
-            break;
-        }
-
-        lv_msgbox_add_footer_button(msgbox, buttons[i]);
-    }
-
-    return msgbox;
-}
-
-static uint32_t lv_color_to_u32(lv_color32_t color) {
-    return lv_color_to_u32(lv_color_make(color.red, color.green, color.blue));
+template <typename T>
+static T clamp(T value, T min, T max) {
+    if (value < min)
+        return min;
+    if (value > max)
+        return max;
+    return value;
 }
 
 #endif

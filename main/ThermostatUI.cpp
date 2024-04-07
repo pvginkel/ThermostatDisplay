@@ -413,8 +413,8 @@ void ThermostatUI::handleMode() {
     static const char* button_labels[] = {nullptr, nullptr, ""};
 
     if (!button_labels[0]) {
-        button_labels[0] = _strdup(format("%s %s", Messages::fireFlameCurvedIcon, Messages::heating).c_str());
-        button_labels[1] = _strdup(format("%s %s", Messages::powerOffIcon, Messages::off).c_str());
+        button_labels[0] = strdup(format("%s %s", Messages::fireFlameCurvedIcon, Messages::heating).c_str());
+        button_labels[1] = strdup(format("%s %s", Messages::powerOffIcon, Messages::off).c_str());
     }
 
     _msgbox = lv_msgbox_create(nullptr, nullptr, nullptr, button_labels, false);

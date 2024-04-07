@@ -65,5 +65,5 @@ static uint16_t dither_xy(int x, int y, uint8_t r, uint8_t g, uint8_t b) {
 
 /* Dithering Pixel from 32/24bit RGB */
 uint16_t dither_color_xy(uint32_t x, uint32_t y, lv_color32_t col) {
-    return dither_xy(x, y, LV_COLOR_R(col), LV_COLOR_G(col), LV_COLOR_B(col));
+    return dither_xy(x, y, col.ch.red, col.ch.green, col.ch.blue);
 }
