@@ -12,7 +12,7 @@ constexpr auto ARC_Y_OFFSET = 57;
 constexpr auto ARC_WIDTH = 9;
 constexpr auto ARC_RADIUS = 52;
 constexpr auto ARC_LOCAL_TEMPERATURE_CIRCLE_SIZE = 2.5;
-constexpr auto ARC_SETPOINT_CIRCLE_SIZE = 5;
+constexpr auto ARC_SETPOINT_CIRCLE_SIZE = 6.5;
 
 constexpr auto BUTTON_RADIUS = 6;
 constexpr auto BUTTON_CHANGE_X_OFFSET = 90;
@@ -334,8 +334,10 @@ void ThermostatUI::renderState() {
 
     if (_state.mode == ThermostatMode::Off || setpointOffset <= localTemperatureOffset) {
         lv_obj_add_flag(_setpointHeatingArc, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(_setpointOuterCircle, LV_OBJ_FLAG_HIDDEN);
     } else {
         lv_obj_clear_flag(_setpointHeatingArc, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(_setpointOuterCircle, LV_OBJ_FLAG_HIDDEN);
 
         lv_arc_set_bg_angles(_setpointHeatingArc, localTemperatureOffset, setpointOffset);
     }
@@ -446,6 +448,12 @@ void ThermostatUI::handleSetMode(ThermostatMode mode) {
         lv_msgbox_close(_msgbox);
         _msgbox = nullptr;
     }
+
+#if LV_SIMULATOR
+    _state.mode = mode;
+
+    renderState();
+#endif
 
     _modeChanged.call(mode);
 }
