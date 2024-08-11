@@ -494,7 +494,7 @@ CONFIG_OTA_RECV_TIMEOUT=15000
 #
 # Logging Configuration
 #
-CONFIG_LOG_ENDPOINT="http://192.168.178.7:9001/"
+CONFIG_LOG_ENDPOINT="http://iotlogging.home/"
 CONFIG_LOG_INTERVAL=5000
 CONFIG_LOG_RECV_TIMEOUT=15000
 # end of Logging Configuration
