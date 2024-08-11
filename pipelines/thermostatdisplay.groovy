@@ -18,6 +18,10 @@ withCredentials([
                         url: 'https://github.com/pvginkel/ThermostatDisplay.git'
                         
                     container('idf') {
+                        // Necessary because the IDF container doesn't have support
+                        // for setting the uid/gid.
+                        sh 'git config --global --add safe.directory \'*\''
+                        
                         sh '/opt/esp/entrypoint.sh scripts/dockerbuild.sh'
                     }
                 }
