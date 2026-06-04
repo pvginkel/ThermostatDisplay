@@ -1,4 +1,4 @@
-library('JenkinsPipelineUtils') _
+library identifier: 'JenkinsPipelineUtils', changelog: false
 
 withVault([vaultSecrets: [
     [path: 'kv/shared/wifi-iot', engineVersion: 2, secretValues: [
