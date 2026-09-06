@@ -9,7 +9,7 @@ withVault([vaultSecrets: [
     ]],
 ]]) {
     podTemplate(inheritFrom: 'jenkins-agent-large', containers: [
-        containerTemplate(name: 'idf', image: 'espressif/idf:v5.1.3', command: 'sleep', args: 'infinity', envVars: [
+        containerTemplate(name: 'idf', image: 'espressif/idf:v5.5.3', command: 'sleep', args: 'infinity', envVars: [
             containerEnvVar(key: 'WIFI_PASSWORD', value: '$WIFI_PASSWORD'),
             containerEnvVar(key: 'MQTT_PASSWORD', value: '$MQTT_PASSWORD'),
         ])
