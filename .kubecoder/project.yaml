@@ -1,0 +1,25 @@
+projects:
+  root:
+    description: ESP32-S3 thermostat display firmware — ESP-IDF 5.5.3 and LVGL 8.2 on a Waveshare ESP32-S3-Touch-LCD-4.3.
+
+    # The pipeline sits in Jenkins' `Archived` folder. Its last run (#15) failed in
+    # the *deploy* stage — a signing key HelmCharts no longer ships, and an
+    # in-cluster upload host the agent cannot resolve. The firmware build stage
+    # itself was green.
+    jenkins: Archived/ThermostatDisplay
+
+    # No `setup:` — a fresh clone needs nothing installed. `idf.py build` runs the
+    # IDF component manager itself, which downloads lvgl into managed_components/.
+
+    # Builds the default sdkconfig. The sdkconfig.ci.* variants are framebuffer
+    # experiments, not a build matrix.
+    #
+    # main/CMakeLists.txt generates build/config/secrets.h from the WIFI_PASSWORD
+    # and MQTT_PASSWORD environment variables on every build; unset (the normal
+    # case here) they become empty strings, so the image builds but cannot join
+    # the network. Only CI, which reads them from OpenBao, produces a flashable
+    # image.
+    build: cexec esp-idf idf.py build
+
+    # No `test:` — the repo has no tests, on-target or host-side.
+    # No `lint:` — no linter is configured, and CI runs none.

@@ -1,0 +1,23 @@
+# ESP32-S3 thermostat display firmware (ESP-IDF + LVGL).
+#
+# One repository, no siblings, no services and no ports: the artefact is a .bin
+# that is flashed over USB or uploaded OTA by hand, so nothing here listens.
+
+capabilities:
+  github: rw
+
+tools:
+  # ESP-IDF 5.5.3 — idf.py with the Xtensa and RISC-V toolchains.
+  #
+  # The catalog entry carries the sidecar's memory limit and its .ccache home
+  # overlay, so neither is restated here. It also wraps every command in
+  # ESP-IDF's own activation script, which is why the verbs in project.yaml are
+  # a bare `idf.py ...` rather than CI's `/opt/esp/entrypoint.sh idf.py ...`.
+  # Consequence of that wrapper: every command in this sidecar prints a
+  # Python-detection banner on stdout and an activation block on stderr before
+  # its own output. That is the toolchain, not a fault -- filter it (tail/grep -v)
+  # when you parse the output of something run through `cexec esp-idf`.
+  - use: esp-idf
+
+setup:
+  - kc project setup
